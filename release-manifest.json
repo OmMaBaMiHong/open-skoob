@@ -747,19 +747,19 @@
     },
     {
       "path": "package.json",
-      "sha256": "fbeac62a5331cd02c8535d3ebdd8fb0050f22e9329badfd6cb3392b29269f025"
+      "sha256": "5e3421824db62d2acada2f696900160f22ad80b9c423a0be5a7caa4b4aaea541"
     },
     {
       "path": "package-lock.json",
-      "sha256": "780a13bb1e3e8f3a645d92c3ad2bba6314f5eefd812199f66b346f378d500eaf"
+      "sha256": "c05993f4c6b9066e8d839ac8459f84a7f080fc67f17a346273078639246998cd"
     },
     {
       "path": "README.md",
-      "sha256": "2ed20db3e60fc4ef0c86555e1108a8fb3592f5a3c81d996584f9f2665edab9c1"
+      "sha256": "bf5727f3a750f17d66ac81c2f0d6d3671e7d438358830ff5aa98bf2faf439a4b"
     },
     {
       "path": "LICENSE",
-      "sha256": "20b9e0690bf71b53765767bc2627da6427d9dcb856803ba496d315c4caa1ec9c"
+      "sha256": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5"
     },
     {
       "path": ".gitignore",
@@ -788,6 +788,10 @@
     {
       "path": ".github/assets/contact-wechat.jpg",
       "sha256": "45a50906c6ea9abdfc14caabefcd8f392e1ba23932dd8b42dfe116092d28df83"
+    },
+    {
+      "path": "COMMERCIAL-LICENSE.md",
+      "sha256": "01e7b00234bec8ceee556a567b0c72e43241cf92e47f81a683bdbdcb0bd847dd"
     }
   ]
 }

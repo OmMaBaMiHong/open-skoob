@@ -31,5 +31,6 @@
   "description": "Customizable Skoob web interface for the official API",
   "engines": {
     "node": ">=22"
-  }
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
 }
