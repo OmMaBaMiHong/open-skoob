@@ -98,7 +98,7 @@ npm run dev
 ```
 
 1. 打开 `http://127.0.0.1:9002`，直接填写官方 API Key，或选择「官方账号授权登录」，无需本地访问密码。
-2. 没有 Key？点击醒目的「前往官方领取 Free Key」，在 [中转站密钥页](https://gaotk.com/keys) 创建 `openskoob-free` 分组的 Key，回来粘贴并验证。已有有效官方 Key 可直接使用；授权登录后也可明确选择已有 Free Key。验证后，首页按当前 Free 权益展示真实官方脑洞、热点及模板。云端逐项校验 `brainstorm.read`、`hotboard.read`、`templates.read`，不是仅在页面隐藏按钮；官网匿名预览保持开放。
+2. 没有 Key？点击醒目的「前往官方领取 Free Key」，在 [中转站密钥页](https://gaotk.com/keys) 创建 `openskoob-free` 分组的 Key，回来粘贴并验证。已有有效官方 Key 可直接使用；授权登录后也可明确选择已有 Free Key。验证后，首页按当前 Free 权益展示真实官方脑洞、热点及模板。云端逐项校验 `brainstorm.read`、`hotboard.read`、`templates.read`、`models.use`，不是仅在页面隐藏按钮；官网匿名预览保持开放。
    也可选择「暂不连接，使用自己的模型」，在「设置 → 模型配置」添加自己的 OpenAI 兼容服务；本地基础创作不要求购买套餐。
 3. 在首页输入灵感，点「以此灵感开始六步创作」。确认意图卡后，按步骤生成、确认或重写，正文保存到本地作品库。普通问题可直接点「发送」进行对话。
 4. 点顶部「官方连接与 Key」可管理接入。直接填 Key 可查看官方免费列表；授权登录还能连接官方账号、同步套餐和上传模板。Free Key 不等于付费会员，四大引擎仍由官方实时校验权益；接入 Key 不会覆盖自己的服务或自动切换模型。
@@ -162,3 +162,9 @@ QQ 群：**1107955676**（焚决 skoob · 小说 Agent 创作群）
   <img src=".github/assets/qq-group.jpg" width="300" alt="QQ 交流群二维码" />
   <img src=".github/assets/contact-wechat.jpg" width="300" alt="作者微信" />
 </p>
+
+### Free 模型权益
+
+官方模型统一使用「OpenSkoob 中转站」入口。先领取并验证自己的 Key，再加载该 Key 获授权的模型；项目不内置公共 Key 或免费模型目录。Free 套餐的 `models.use` 控制官方目录接入，模型调用前再次核验权益和模型权限。免费模型的范围、额度和可用状态由中转站决定，付费模型仍按中转站计费。自带服务商和本地模型不依赖官方 Free 权益。
+
+旧版自动创建的「Skoob 官方 / OpenSkoob Free」配置会在凭据相同时合并到官方入口，保留原模型选择与加密恢复记录；不同 Key 不会被静默覆盖。

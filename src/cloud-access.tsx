@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 export type CloudAccess = { ready: boolean; entitlements: string[]; planName: string; message: string; connect: () => void };
-export const FREE_RIGHT_LABELS: Record<string, string> = { "brainstorm.read": "AI 脑洞与配图", "hotboard.read": "热点榜单与搜索", "templates.read": "官方模板、流派与技能" };
+export const FREE_RIGHT_LABELS: Record<string, string> = { "brainstorm.read": "AI 脑洞与配图", "hotboard.read": "热点榜单与搜索", "templates.read": "官方模板、流派与技能", "models.use": "官方模型接入（范围与额度以 Key 授权为准）" };
 export const CloudAccessContext = createContext<CloudAccess>({ ready: false, entitlements: [], planName: "Free 免费套餐", message: "领取 Free Key 后，即可浏览官方云端内容。", connect: () => {} });
 export const useCloudAccess = () => useContext(CloudAccessContext);
 export function CloudAccessPrompt() {

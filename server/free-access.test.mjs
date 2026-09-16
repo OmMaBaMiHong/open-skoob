@@ -8,9 +8,69 @@ import { createApplication } from './app.mjs';
 import { selectedContext } from './context.mjs';
 import { cloudCatalog } from './cloud-catalog.mjs';
 import { freeAccess } from './free-access.mjs';
+import { complete, resolveModel } from './models.mjs';
 
 const plan = { id: 'free', name: 'Free 免费套餐', enabled: true, entitlements: ['brainstorm.read', 'hotboard.read', 'templates.read'] };
 const grant = { ready: true, plan, entitlements: plan.entitlements, isMember: false };
+
+test('legacy official service migrates once without replacing a different configured Key', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'skoob-official-migration-')); let instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  t.after(async () => { await instance.close(); rmSync(dir, { recursive: true, force: true }); });
+  const legacy = 'custom:Skoob 官方 #123456abcdef';
+  instance.store.set('settings', 'models', { service: legacy, defaultModel: 'selected', services: [{ service: 'custom', name: 'Skoob 官方 #123456abcdef', baseUrl: 'https://lai.gaotk.com/v1' }, { service: 'custom', name: 'own', baseUrl: 'http://localhost:1234/v1' }] });
+  instance.store.secret(legacy, 'fixture-old'); instance.store.secret('gaotk', 'fixture-different'); instance.store.secret('custom:own', 'fixture-own');
+  instance.store.set('settings', 'freeAccess', { method: 'key', service: legacy, keyId: 'old' });
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  assert.equal(instance.store.secret('gaotk'), 'fixture-different');
+  assert.equal(instance.store.get('settings', 'freeAccess').service, legacy);
+  instance.store.secret('gaotk', '');
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  assert.equal(instance.store.secret('gaotk'), 'fixture-old');
+  assert.equal(instance.store.get('settings', 'freeAccess').service, 'gaotk');
+  const cfg = instance.store.get('settings', 'models');
+  assert.equal(cfg.services.length, 2); assert.equal(cfg.service, 'gaotk'); assert.equal(cfg.defaultModel, 'selected');
+  assert.equal(resolveModel(instance.store, { service: legacy, model: 'selected' }).key, 'fixture-old');
+  assert.equal(instance.store.secret('custom:own'), 'fixture-own');
+  assert.ok(instance.store.get('settings', 'officialServiceBackup'));
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  assert.deepEqual(instance.store.get('settings', 'models'), cfg);
+});
+
+test('official models require a Key and live Free entitlement, never a built-in or stale catalog', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'skoob-model-right-test-'));
+  const instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  t.after(async () => { await instance.close(); rmSync(dir, { recursive: true, force: true }); });
+  const session = await (await instance.app.request('/api/v1/local/session', { method: 'POST', headers: { 'X-Skoob-Local': '1' } })).json();
+  const request = (path, method = 'GET', body) => instance.app.request('/api/v1' + path, { method, headers: { Authorization: `Bearer ${session.token}`, 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  let enabled = true; const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    const path = String(url); const key = new Headers(init.headers).get('authorization'); calls.push({ path, key });
+    assert.equal(key, 'Bearer fixture-official-key');
+    if (path.endsWith('/open/access?refresh=1')) return Response.json(grant);
+    if (path.endsWith('/open/catalog/models')) return enabled ? Response.json({ data: [{ id: 'allowed:free', name: 'Allowed · Free' }] }) : Response.json({ error: { code: 'FREE_ENTITLEMENT_REQUIRED', message: '免费模型权益已关闭' } }, { status: 403 });
+    if (path.endsWith('/chat/completions')) return Response.json({ choices: [{ message: { content: 'ok' } }] });
+    throw new Error('Unexpected network request: ' + path);
+  });
+  instance.store.set('modelCatalogs', 'gaotk', [{ id: 'old:free' }]);
+  assert.equal((await request('/services/gaotk/models')).status, 403);
+  assert.equal(calls.length, 0);
+  const connected = await (await request('/local/cloud/key', 'POST', { apiKey: 'fixture-official-key' })).json();
+  assert.equal(connected.service, 'gaotk');
+  const services = (await (await request('/services')).json()).services;
+  assert.equal(services.filter(s => /Skoob/.test(s.label)).length, 1);
+  assert.deepEqual((await (await request('/services/gaotk/models')).json()).models.map(m => m.id), ['allowed:free']);
+  await assert.rejects(complete(instance.store, { service: 'gaotk', model: 'not-authorized' }, []), { code: 'MODEL_NOT_AUTHORIZED' });
+  assert.equal(calls.some(c => c.path.endsWith('/chat/completions')), false);
+  assert.equal(await complete(instance.store, { service: 'gaotk', model: 'allowed:free' }, [], {}), 'ok');
+  const generated = calls.filter(c => c.path.endsWith('/chat/completions')).length;
+  enabled = false;
+  assert.equal((await request('/services/gaotk/models')).status, 403);
+  assert.equal((await (await request('/services/models')).json()).groups.some(g => g.service === 'gaotk'), false);
+  await assert.rejects(complete(instance.store, { service: 'gaotk', model: 'allowed:free' }, []), { code: 'FREE_ENTITLEMENT_REQUIRED' });
+  assert.equal(calls.filter(c => c.path.endsWith('/chat/completions')).length, generated);
+  await request('/services/gaotk/secret', 'PUT', { apiKey: '' });
+  assert.equal((await request('/services/gaotk/models')).status, 403);
+});
 
 test('Free onboarding validates the upstream owner/group/status and gates real catalogs without granting membership', async t => {
   const calls = []; let active = true, reachable = true, accountId = '42';

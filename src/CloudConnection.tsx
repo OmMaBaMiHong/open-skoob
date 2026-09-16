@@ -52,13 +52,13 @@ export function CloudConnection({ onClose, onChanged, initial = false }: { initi
   }
   return <div className={initial ? "local-entry" : "local-modal"}><section className={`local-panel cloud-panel${initial ? " cloud-entry-panel" : ""}`} role="dialog" aria-modal="true" aria-label="连接 Skoob 官方平台">
     <div className="cloud-panel-heading"><h2>{initial ? "用一个 Key，连接你的灵感库" : "连接 Skoob 官方平台"}</h2>{!initial && <button type="button" onClick={onClose}>关闭</button>}</div>
-    <p>填写官方 API Key，即可免费浏览天魔脑洞、新闻热点与官方模板。还没有 Key？前往中转站领取 Free Key，回来粘贴即可。</p>
+    <p>填写官方 API Key，即可按 Free 权益浏览天魔脑洞、新闻热点与官方模板，并接入获授权的免费模型。还没有 Key？前往中转站领取 Free Key，回来粘贴即可。</p>
     <a className="cloud-primary-link" href="https://gaotk.com/keys" target="_blank" rel="noreferrer">前往官方领取 Free Key ↗</a>
     <form onSubmit={e => { e.preventDefault(); void run(async () => { await request("/key", "POST", { apiKey }); setApiKey(""); await onChanged(); await refresh(); setNotice("官方 Key 已验证，可以查看脑洞、热点和模板了。"); }); }}>
       <label>官方 API Key<input type="password" autoFocus={initial} value={apiKey} onChange={e => setApiKey(e.target.value)} autoComplete="off" placeholder="在这里粘贴你的官方 Key" required /></label>
       <button type="submit" disabled={busy || !apiKey.trim()}>{busy ? "正在连接…" : "验证 Key，进入工作室"}</button>
     </form>
-    <p className="local-help">Free Key 免费查看云端列表；模型用量按所选 Key 计费。四大核心引擎按套餐使用，可通过官方授权登录同步权益、上传自己的模板。</p>
+    <p className="local-help">Free 套餐包含官方模型接入；验证 Key 后加载这把 Key 的模型列表。免费模型的范围与额度以中转站为准，付费模型按所选 Key 计费。四大核心引擎按套餐使用，可通过官方授权登录同步权益、上传自己的模板。</p>
     {error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
     <details><summary>高级连接设置</summary><label>服务源地址<input aria-label="官方服务地址" type="url" value={cloud.baseUrl} onChange={e=>{setCloud({...cloud,baseUrl:e.target.value});setFlow(null);}} /></label></details>
     <div className="cloud-connect-methods"><button type="button" disabled={busy} onClick={()=>void authorize()}>{cloud.configured?"重新授权 / 切换账号":"或使用官方账号授权登录"}</button></div>

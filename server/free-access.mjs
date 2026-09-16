@@ -4,6 +4,29 @@ import { cloudOptions } from './cloud.mjs';
 
 // These are user endpoints, never administrator endpoints. Tokens stay server-side.
 export function freeAccess(store, env) {
+  function officialService(secret) {
+    const service = 'gaotk'; const existing = store.secret(service);
+    if (existing && existing !== secret && store.get('settings', 'freeAccess')?.service !== service) throw new ApiError(409, 'OFFICIAL_KEY_CONFLICT', 'OpenSkoob 中转站已配置另一把 Key，请先在模型设置中确认并移除旧 Key，避免覆盖你的配置。');
+    const models = config(store);
+    const legacy = models.services.filter(e => e.service === 'custom' && /^(Skoob 官方 #[a-f0-9]{12}|OpenSkoob Free #\d+)$/.test(e.name) && e.baseUrl === 'https://lai.gaotk.com/v1' && store.secret(serviceId(e)) === secret);
+    store.transaction(() => {
+      if (legacy.length && !store.get('settings', 'officialServiceBackup')) store.set('settings', 'officialServiceBackup', { models, freeAccess: store.get('settings', 'freeAccess'), secrets: Object.fromEntries(legacy.map(e => [serviceId(e), store.get('secrets', serviceId(e))])) });
+      const aliases = store.get('settings', 'serviceAliases', {});
+      for (const e of legacy) { const id = serviceId(e); aliases[id] = service; store.secret(id, ''); store.remove('modelCatalogs', id); if (models.service === id) models.service = service; }
+      models.services = models.services.filter(e => !legacy.includes(e));
+      if (!models.services.some(e => serviceId(e) === service)) models.services.push({ ...(legacy[0] || {}), service, name: 'OpenSkoob 中转站', baseUrl: 'https://lai.gaotk.com/v1', apiFormat: legacy[0]?.apiFormat || 'chat', stream: legacy[0]?.stream ?? true });
+      store.set('settings', 'serviceAliases', aliases); store.secret(service, secret); store.remove('modelCatalogs', service); store.set('settings', 'models', models);
+    });
+    return service;
+  }
+  // Upgrade only the previously selected official credential; never merge different Keys.
+  const previous = store.get('settings', 'freeAccess');
+  if (previous?.service?.startsWith('custom:') && store.secret(previous.service) && (!store.secret('gaotk') || store.secret('gaotk') === store.secret(previous.service))) {
+    const models = config(store); const entry = models.services.find(e => serviceId(e) === previous.service);
+    if (entry && /^(Skoob 官方 #[a-f0-9]{12}|OpenSkoob Free #\d+)$/.test(entry.name) && entry.baseUrl === 'https://lai.gaotk.com/v1') {
+      const service = officialService(store.secret(previous.service)); store.set('settings', 'freeAccess', { ...previous, service });
+    }
+  }
   async function json(base, path, token, userId) {
     let response;
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -89,11 +112,8 @@ export function freeAccess(store, env) {
       if (typeof raw !== 'string' || !raw.trim() || raw.length > 10000) throw new ApiError(400, 'INVALID_KEY', '请填写官方 API Key');
       const secret = raw.trim(); const before = fingerprint(); const key = await modelKey(secret);
       if (before !== fingerprint()) throw new ApiError(409, 'CLOUD_CONNECTION_CHANGED', '连接已改变，请重试。');
-      const name = `Skoob 官方 #${key.id.slice(0, 12)}`; const service = `custom:${name}`;
-      const models = config(store);
-      if (store.secret(service) && store.secret(service) !== secret) throw new ApiError(409, 'SERVICE_EXISTS', '同名模型配置已存在，请先在模型设置中处理。');
-      if (!models.services.some(e => serviceId(e) === service)) models.services.push({ service: 'custom', name, baseUrl: 'https://lai.gaotk.com/v1', apiFormat: 'chat', stream: true });
-      store.transaction(() => { store.secret(service, secret); store.set('settings', 'models', models); store.set('settings', 'freeAccess', { method: 'key', keyId: key.id, service }); store.set('settings', 'onboarding', { choice: 'official' }); });
+      const service = officialService(secret);
+      store.transaction(() => { store.set('settings', 'freeAccess', { method: 'key', keyId: key.id, service }); store.set('settings', 'onboarding', { choice: 'official' }); });
       cached = { identity: fingerprint(), value: { ready: true, identity: `official-key:${key.id}`, key: { id: key.id, name: key.name, last4: key.last4 }, service, ...granted(key) }, expiresAt: Date.now() + 30000 };
       return { ok: true, service };
     },
@@ -108,13 +128,8 @@ export function freeAccess(store, env) {
     },
     async select(id) {
       const cfg = await account(); const key = await selected(cfg, id); const official = await modelKey(key.key); unchanged(cfg);
-      const name = `OpenSkoob Free #${key.id}`; const service = `custom:${name}`;
-      const models = config(store);
-      if (store.secret(service) && store.secret(service) !== key.key) throw new ApiError(409, 'SERVICE_EXISTS', '同名本地模型配置已存在，请先在模型设置中处理，避免覆盖你的配置。');
-      const entry = { service: 'custom', name, baseUrl: 'https://lai.gaotk.com/v1', apiFormat: 'chat', stream: true };
-      const index = models.services.findIndex(e => serviceId(e) === service);
-      if (index < 0) models.services.push(entry); else models.services[index] = { ...models.services[index], ...entry };
-      store.transaction(() => { store.secret(service, key.key); store.set('settings', 'models', models); store.set('settings', 'freeAccess', { keyId: String(key.id), service, baseUrl: cfg.baseUrl, userId: cfg.userId }); });
+      const service = officialService(key.key);
+      store.set('settings', 'freeAccess', { keyId: String(key.id), service, baseUrl: cfg.baseUrl, userId: cfg.userId });
       cached = { identity: fingerprint(), value: { ready: true, identity: `${cfg.baseUrl}:${cfg.userId}:${key.id}`, key: metadata(key, cfg), service, ...granted(official) }, expiresAt: Date.now() + 30000 };
       // Model catalogs are loaded by the existing model picker; no model choice is made here.
       return { ok: true, service };

@@ -5,7 +5,7 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { streamSSE } from 'hono/streaming';
 import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { Store } from './store.mjs';
-import { ApiError, config, presets, serviceId, endpoint, resolveModel, listModels, complete } from './models.mjs';
+import { ApiError, config, presets, serviceId, canonicalService, isOfficialService, endpoint, resolveModel, listModels, complete } from './models.mjs';
 import { exportBook } from './export.mjs';
 import { selectedContext } from './context.mjs';
 import { mountFilms } from './film.mjs';
@@ -134,11 +134,21 @@ export function createApplication({ dataDir, origins = [], cloudEnv = process.en
   app.put('/api/v1/services/config', updateConfig);
   app.get('/api/v1/project/default-model', c => { const cfg = config(store); return c.json({ service: cfg.service, defaultModel: cfg.defaultModel }); });
   app.put('/api/v1/project/default-model', updateConfig);
-  app.get('/api/v1/services/models', c => c.json({ groups: services().filter(s => s.connected).map(s => ({ service: s.service, label: s.label, models: (config(store).services.find(e => serviceId(e) === s.service)?.models || store.get('modelCatalogs', s.service, [])).map(m => typeof m === 'string' ? { id: m, name: m } : m) })) }));
-  app.get('/api/v1/services/:service/secret', c => { const key = store.secret(c.req.param('service')); return c.json({ configured: Boolean(key), last4: key.length >= 4 ? key.slice(-4) : '' }); });
-  app.put('/api/v1/services/:service/secret', async c => { const b = await body(c); if (typeof b.apiKey !== 'string' || b.apiKey.length > 10000) throw new ApiError(400, 'INVALID_KEY', '无效的 API Key'); store.secret(c.req.param('service'), b.apiKey.trim()); return c.json({ ok: true }); });
+  app.get('/api/v1/services/models', async c => {
+    const groups = await Promise.all(services().filter(s => s.connected).map(async s => {
+      if (isOfficialService(store, s.service)) {
+        try { return { service: s.service, label: s.label, models: await listModels(store, s.service) }; }
+        catch { return null; } // Failed/revoked rights never reuse a cached official catalog.
+      }
+      return { service: s.service, label: s.label, models: (config(store).services.find(e => serviceId(e) === s.service)?.models || store.get('modelCatalogs', s.service, [])).map(m => typeof m === 'string' ? { id: m, name: m } : m) };
+    }));
+    return c.json({ groups: groups.filter(Boolean) });
+  });
+  app.get('/api/v1/services/:service/secret', c => { const key = store.secret(canonicalService(store, c.req.param('service'))); return c.json({ configured: Boolean(key), last4: key.length >= 4 ? key.slice(-4) : '' }); });
+  app.put('/api/v1/services/:service/secret', async c => { const b = await body(c); if (typeof b.apiKey !== 'string' || b.apiKey.length > 10000) throw new ApiError(400, 'INVALID_KEY', '无效的 API Key'); const id = canonicalService(store, c.req.param('service')); store.transaction(() => { store.secret(id, b.apiKey.trim()); store.remove('modelCatalogs', id); }); return c.json({ ok: true }); });
   app.get('/api/v1/services/:service/models', async c => {
-    const id = c.req.param('service'); const e = config(store).services.find(e => serviceId(e) === id);
+    const id = canonicalService(store, c.req.param('service')); const e = config(store).services.find(e => serviceId(e) === id);
+    if (isOfficialService(store, id)) return c.json({ models: await listModels(store, id) });
     const saved = e?.models || store.get('modelCatalogs', id);
     if (saved && c.req.query('refresh') !== '1') return c.json({ models: saved.map(m => typeof m === 'string' ? { id: m, name: m } : m) });
     const models = await listModels(store, id); store.set('modelCatalogs', id, models); return c.json({ models });
@@ -148,7 +158,7 @@ export function createApplication({ dataDir, origins = [], cloudEnv = process.en
     catch (error) { return c.json({ ok: false, error: error instanceof ApiError ? error.message : '连接失败，请检查服务地址和网络' }, 400); }
   });
   app.delete('/api/v1/services/:service', c => {
-    const id = c.req.param('service'); const cfg = config(store); cfg.services = cfg.services.filter(e => serviceId(e) !== id);
+    const id = canonicalService(store, c.req.param('service')); const cfg = config(store); cfg.services = cfg.services.filter(e => serviceId(e) !== id);
     if (cfg.service === id) { cfg.service = null; cfg.defaultModel = null; }
     store.transaction(() => { store.set('settings', 'models', cfg); store.secret(id, ''); store.remove('modelCatalogs', id); }); return c.json({ ok: true });
   });

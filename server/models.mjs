@@ -1,3 +1,5 @@
+import { cloudOptions } from './cloud.mjs';
+
 export class ApiError extends Error {
   constructor(status, code, message) { super(message); this.status = status; this.code = code; }
 }
@@ -9,6 +11,22 @@ export const presets = [
 ];
 export const serviceId = entry => entry.service === 'custom' ? `custom:${entry.name}` : entry.service;
 export function config(store) { return store.get('settings', 'models', { services: [], service: null, defaultModel: null, configSource: 'local' }); }
+export const canonicalService = (store, id) => store.get('settings', 'serviceAliases', {})[id] || id;
+export function isOfficialService(store, service, input = {}) {
+  service = canonicalService(store, service);
+  const entry = config(store).services.find(e => serviceId(e) === service);
+  const base = input.baseUrl || entry?.baseUrl || presets.find(e => e.service === service)?.baseUrl;
+  return service === 'gaotk' || Boolean(base && ['lai.gaotk.com', 'gaotk.com'].includes(new URL(endpoint(base)).hostname));
+}
+async function officialModels(store, key, signal) {
+  if (!key) throw new ApiError(403, 'FREE_KEY_REQUIRED', '请先领取并配置官方 Key，再使用 Free 套餐的模型权益。');
+  const cloud = cloudOptions(store);
+  const response = await fetch(endpoint(cloud.baseUrl) + '/api/v1/open/catalog/models', { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(20000)]), redirect: 'error' });
+  const body = await response.json();
+  if (!response.ok) throw new ApiError(response.status, body?.error?.code || 'FREE_VERIFY_FAILED', body?.error?.message || '官方模型权益校验失败，请重新验证 Key。');
+  if (!Array.isArray(body.data)) throw new ApiError(502, 'MODEL_CATALOG_INVALID', '官方模型目录响应无效');
+  return body.data.filter(m => typeof m.id === 'string').map(m => ({ id: m.id, name: m.name || m.id }));
+}
 export function endpoint(value) {
   let u; try { u = new URL(value); } catch { throw new ApiError(400, 'INVALID_BASE_URL', '请填写完整的模型服务 Base URL'); }
   if (!['http:', 'https:'].includes(u.protocol) || u.username || u.password || u.search || u.hash) throw new ApiError(400, 'INVALID_BASE_URL', '模型服务地址不能包含凭据、查询参数或片段');
@@ -18,7 +36,7 @@ export function resolveModel(store, selected = {}, purpose) {
   const cfg = config(store); const overrides = store.get('settings', 'overrides', {});
   const override = purpose ? overrides[purpose] : null;
   // Explicit per-request selection wins. Never swap providers or create a gateway key.
-  const service = selected.service || (override && typeof override === 'object' ? override.service : null) || cfg.service;
+  const service = canonicalService(store, selected.service || (override && typeof override === 'object' ? override.service : null) || cfg.service);
   const model = selected.model || (typeof override === 'string' ? override : override?.model) || cfg.defaultModel;
   const entry = cfg.services.find(e => serviceId(e) === service);
   const preset = presets.find(e => e.service === service);
@@ -29,9 +47,11 @@ export function resolveModel(store, selected = {}, purpose) {
   return { ...entry, service, model, baseUrl, key };
 }
 export async function listModels(store, service, input = {}, signal) {
+  service = canonicalService(store, service);
   const cfg = config(store); const entry = cfg.services.find(e => serviceId(e) === service); const preset = presets.find(e => e.service === service);
   const baseUrl = endpoint(input.baseUrl || entry?.baseUrl || preset?.baseUrl);
   const key = input.apiKey || store.secret(service);
+  if (isOfficialService(store, service, input)) return officialModels(store, key, signal);
   const response = await fetch(`${baseUrl}/models`, { headers: key ? { Authorization: `Bearer ${key}` } : {}, signal: AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(20000)]), redirect: 'error' });
   if (!response.ok) throw new ApiError(502, 'MODEL_CATALOG_FAILED', `模型列表请求失败（HTTP ${response.status}），请检查地址和 Key`);
   const body = await response.json();
@@ -40,6 +60,10 @@ export async function listModels(store, service, input = {}, signal) {
 }
 export async function complete(store, selected, messages, { signal, onDelta, purpose, json = false } = {}) {
   const m = resolveModel(store, selected, purpose);
+  if (isOfficialService(store, m.service)) {
+    const allowed = await officialModels(store, m.key, signal);
+    if (!allowed.some(model => model.id === m.model)) throw new ApiError(403, 'MODEL_NOT_AUTHORIZED', '当前 Key 未授权所选模型，请刷新模型列表重新选择。');
+  }
   const responses = m.apiFormat === 'responses';
   const stream = m.stream !== false && Boolean(onDelta);
   const body = responses ? { model: m.model, input: messages, stream, store: false } : { model: m.model, messages, stream };

@@ -755,7 +755,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "40b6b663d0f42ba076f5ed0466145f46fc3dd51689faea8643a8e826ee44f31e"
+      "sha256": "6c04c8e60dd5f8fa5095c2a5a9d42da60632d670cf5d68b56b0cbde331d8592a"
     },
     {
       "path": "LICENSE",
@@ -775,7 +775,7 @@
     },
     {
       "path": "docs/api-integration.md",
-      "sha256": "f530369ffef525a10657e7263b8a626e235c785a055a68677c9f8b29c135f408"
+      "sha256": "ac2c660d1eaca87472fde95249c8d88e7c7f0cc3ca8370aa3cefafea6137a5d9"
     },
     {
       "path": ".github/assets/wechat-pay.jpg",
@@ -823,7 +823,7 @@
     },
     {
       "path": "server/models.mjs",
-      "sha256": "56726e7584b1f8323314eb44225604c75db856eb31df0689cd7d4f0e3e26eccb"
+      "sha256": "d1cad6134f0ed6b71ae24e983c92cd81a76d2ff77a4eeac795c137429261d076"
     },
     {
       "path": "server/store.mjs",
@@ -835,7 +835,7 @@
     },
     {
       "path": "server/app.mjs",
-      "sha256": "53d24738ca2b5b3a345c89789c5ff48d49b61247725810a82b5082ef442f2239"
+      "sha256": "0ff50880ebbc8dd77132579776e6c0b712084f543a19ad2d810b8a1342c4b5a9"
     },
     {
       "path": "server/creation.mjs",
@@ -879,7 +879,7 @@
     },
     {
       "path": "src/CloudConnection.tsx",
-      "sha256": "cfb7c7c4c818986155bccce81561b8604d2d276865d90dda96f25eb32e818b4b"
+      "sha256": "0ca84f0351334f7867e80a65e24fd02648550ea84061e9751d76fe3926f2defe"
     },
     {
       "path": "src/pages/CloudAuthorizePage.tsx",
@@ -891,11 +891,11 @@
     },
     {
       "path": "server/free-access.mjs",
-      "sha256": "d0a2189efca40a9f5c24ea8c26af23a0a5e370373dd498e55687cea192080768"
+      "sha256": "4dd9d82a5fb72530346ed699bda74e1c9db6b878f75414782152bc48e21dff84"
     },
     {
       "path": "server/free-access.test.mjs",
-      "sha256": "2c30c974838861a785082de48a6b666f8b4654d7caf22869d096179e6fc17207"
+      "sha256": "e8831df4f974bcb58a403da72f15bde02c90cd690198f4c0112610a8c46682fa"
     },
     {
       "path": "server/cloud-catalog.mjs",
@@ -903,7 +903,7 @@
     },
     {
       "path": "src/cloud-access.tsx",
-      "sha256": "85ec1a357c1840e2e09790f70bfe36dd70925032680a2d6808f75f1956e9212a"
+      "sha256": "71137b0c29771ed9645ae23b68cea2145fa31fe389e9d4ae9c0977b5367360e6"
     }
   ]
 }
