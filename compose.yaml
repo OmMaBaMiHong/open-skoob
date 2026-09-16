@@ -1,0 +1,15 @@
+services:
+  skoob:
+    build: .
+    ports:
+      - "127.0.0.1:9002:9002"
+    volumes:
+      - skoob-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9002/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+volumes:
+  skoob-data:

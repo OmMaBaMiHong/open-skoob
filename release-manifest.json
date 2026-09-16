@@ -419,7 +419,7 @@
     },
     {
       "path": "src/main.tsx",
-      "sha256": "3e2e014683a952da68ae2f6cac9e312b33234937c212212782d13ce459d2af74"
+      "sha256": "e867426b922271a19a32956ed23894585fe4260abc3918bca6011e10d1c01abb"
     },
     {
       "path": "src/pages/AddAgentPage.tsx",
@@ -439,7 +439,7 @@
     },
     {
       "path": "src/pages/BookDetailPage.tsx",
-      "sha256": "1e4ca1546418a30c1e0390cf5f3df2127d12b561332b417f213dccca8af76a91"
+      "sha256": "247de932e8fcc6a173da1eb9e66dfffa224cb9b0fc87a13a1c1dd3a4317e5a0a"
     },
     {
       "path": "src/pages/ConversationMode.tsx",
@@ -455,7 +455,7 @@
     },
     {
       "path": "src/pages/CreateHomePage.tsx",
-      "sha256": "1b4feae89bb0b0749709c18323515152e10ad88958db510cdb90421c3b7d284e"
+      "sha256": "26220a43adb274654440b7d9e548161e6e99efd1c6108081f20b850dc3837139"
     },
     {
       "path": "src/pages/DashboardPage.tsx",
@@ -507,7 +507,7 @@
     },
     {
       "path": "src/pages/SettingsPage.tsx",
-      "sha256": "21103d1a44db9bfd31f1747e46bcf30e7a1efedcf7655252241fb849f445b97d"
+      "sha256": "d0f66e5cf47f9992a41ee5d3b003f606f48fcd341fcf166021b005527cda1571"
     },
     {
       "path": "src/pages/SharedTheaterPage.tsx",
@@ -531,7 +531,7 @@
     },
     {
       "path": "src/pages/WorkbenchPage.tsx",
-      "sha256": "fc072e77246206d341db4ba78dd4f67291eea769870a0060703c8e04847ac38e"
+      "sha256": "5b5dc2656a8bfa519a87edd66399f8c91f38181b5adf18a02082ca62db8a80dc"
     },
     {
       "path": "src/styles/agent-history.css",
@@ -747,15 +747,15 @@
     },
     {
       "path": "package.json",
-      "sha256": "5e3421824db62d2acada2f696900160f22ad80b9c423a0be5a7caa4b4aaea541"
+      "sha256": "985a92d98cf748d01fad550afc76edd5422bb0494f5b5720b0c199e501b8d9dd"
     },
     {
       "path": "package-lock.json",
-      "sha256": "c05993f4c6b9066e8d839ac8459f84a7f080fc67f17a346273078639246998cd"
+      "sha256": "a9a6373863f34830595b669af89c337f5b13d7648cce8222f3b9c69656dfddc1"
     },
     {
       "path": "README.md",
-      "sha256": "bf5727f3a750f17d66ac81c2f0d6d3671e7d438358830ff5aa98bf2faf439a4b"
+      "sha256": "696e4155a3f8bba2d8714a9a62e1e3d17cb02a65ddd8b0ff8f29c04d04b6c334"
     },
     {
       "path": "LICENSE",
@@ -763,19 +763,19 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "c0c60d8636c41b09c834e349489f53f6f5ed328fa6a73a7fe593e85e994dc711"
+      "sha256": "a2cc0736654002ba37d36fe36cc6f229ecf349c992815200db582b7955498adf"
     },
     {
       "path": ".env.example",
-      "sha256": "02721aa496cca4fd2c2ff59f97d7f45b0d09f19b433aa3579c10a38657d1ffba"
+      "sha256": "e32b7434c893a4c7f18f1332853d10bc5d5c7b8c6e1aed29a7749f1d841b44ca"
     },
     {
       "path": "vite.config.ts",
-      "sha256": "8e28df313f48da9afe24044551907828786594374747e29c1605c6bc3072cb72"
+      "sha256": "a0507558a5018a33cd3056e4b89da1775e421a674b097fef680d1aaead6ed082"
     },
     {
       "path": "docs/api-integration.md",
-      "sha256": "6da6e279f293da8269f6b56349a2077acdfe4c1814f93bc39c9691f8fc35737f"
+      "sha256": "27f935c15b30d083730f9e676bb1b91b00d2fa934ee93efd61ff2103a8299d8c"
     },
     {
       "path": ".github/assets/wechat-pay.jpg",
@@ -792,6 +792,82 @@
     {
       "path": "COMMERCIAL-LICENSE.md",
       "sha256": "01e7b00234bec8ceee556a567b0c72e43241cf92e47f81a683bdbdcb0bd847dd"
+    },
+    {
+      "path": "src/SelfHost.tsx",
+      "sha256": "1043e150de131879f7006da26c44d5e5f0e8beded1b5d254d948610180ad6d9f"
+    },
+    {
+      "path": "src/self-host.css",
+      "sha256": "7d109fdcb7c1b306f82530f028dd049de38ff0349f878c45e9ca8aa08080c75e"
+    },
+    {
+      "path": "Dockerfile",
+      "sha256": "119a25534d7f2f559826caba6ee0ec794607fdf36cba47ddb069e98194e2900c"
+    },
+    {
+      "path": "compose.yaml",
+      "sha256": "013ed3a3f1a7929de6fad2a32be4e18eea95c3db78a7cd9a3a7fc634cc489d90"
+    },
+    {
+      "path": ".dockerignore",
+      "sha256": "c5faed1c2da4ce27a63990ac5242c055113251c4f798650492728b9aaa03a893"
+    },
+    {
+      "path": "server/cloud.mjs",
+      "sha256": "899e5c7ff143c9ec49b75c43370b0b8eeca09b1d3352a08254de77bde4d1acfe"
+    },
+    {
+      "path": "server/general.mjs",
+      "sha256": "47b48d53f8e75d3a5da4b6ebb60d109fbec3923473c490f7b442273e53dcab42"
+    },
+    {
+      "path": "server/models.mjs",
+      "sha256": "56726e7584b1f8323314eb44225604c75db856eb31df0689cd7d4f0e3e26eccb"
+    },
+    {
+      "path": "server/store.mjs",
+      "sha256": "c85e8f57377c4b437007c325dc3dd111fd6708cc429db523f0e7a1183b935d59"
+    },
+    {
+      "path": "server/index.mjs",
+      "sha256": "9c087e56b22afc4a575d8d678e1b2efab6bac8e5e905f7dc5074f77b662b285a"
+    },
+    {
+      "path": "server/app.mjs",
+      "sha256": "2e751c87d237251a909f6df1f16e0bb6d8e817779d47055fbfce0a085fde25a8"
+    },
+    {
+      "path": "server/creation.mjs",
+      "sha256": "7b7e7433ba8b0eed16066105f2a892f8475c98a9be7c709b8b221858d814d677"
+    },
+    {
+      "path": "server/app.test.mjs",
+      "sha256": "1d61da3a7a320fd4b9cd979aa8fa20afbfd381ddd4ca64355db64a9bec072383"
+    },
+    {
+      "path": "scripts/dev.mjs",
+      "sha256": "1b11728a7d665cf7f2fe9346ef7a5f9d2ce65a63a0d4f9075258c3756aba2817"
+    },
+    {
+      "path": "server/context.mjs",
+      "sha256": "f87f28d9c2bb2b47398747a9b5ee3fc05f32acf529ac6d34c5d5ca8d5ed3975a"
+    },
+    {
+      "path": "server/film.mjs",
+      "sha256": "5ee4f5b1b1ff9f7b85016961608668e69347035067f244f3119b35a43517adf4"
+    },
+    {
+      "path": "server/theater.mjs",
+      "sha256": "a3444f90cb5ab9bed930b61256c20650b3fe4fe39a485ecd11431117fdcbfa42"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "a9d72c011ee2a09529561726696c7ce968aacef9e6805f6b3778b5624c0528a5"
+    },
+    {
+      "path": "server/export.mjs",
+      "sha256": "25a0305990344ce8bd7a4ea165482c55b526e6fdf09435c7ec74d90f2fcf2786"
     }
   ]
 }

@@ -701,6 +701,9 @@ export function CreateHomePage() {
 
         {/* ── 输入框区域（所有模式共享，与对话页同一个 Composer） ── */}
         <div style={{ maxWidth: 720, margin: "0 auto 48px" }}>
+          {!selectedTemplate && <button type="button" className="btn" style={{ marginBottom: 16 }} disabled={!input.trim() || !composerData.selected} onClick={() => navigate(mode === "film" ? "/film" : mode === "conversation" ? "/conversation" : "/workbench", { state: { instruction: input, mode, strategy: "fast", initialInput: { text: input, files, model: composerData.selected, summoned } } })}>
+            {mode === "film" ? "以此灵感制作影游" : "以此灵感开始六步创作"}
+          </button>}
           <Composer
             value={input}
             onChange={setInput}

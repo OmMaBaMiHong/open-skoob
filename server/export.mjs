@@ -1,0 +1,14 @@
+import { zipSync, strToU8 } from 'fflate';
+import { ApiError } from './models.mjs';
+const xml = text => String(text ?? '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+export function exportBook(book, chapters, format = 'txt') {
+  if (format === 'txt') return { mime: 'text/plain; charset=utf-8', body: [book.title, ...chapters.map(ch=>`${ch.title}\n\n${ch.content}`)].join('\n\n') };
+  if (format === 'md') return { mime: 'text/markdown; charset=utf-8', body: [`# ${book.title}`, ...chapters.map(ch=>`## ${ch.title}\n\n${ch.content}`)].join('\n\n') };
+  if (format !== 'epub') throw new ApiError(400,'FORMAT_INVALID','支持 TXT、Markdown 和 EPUB');
+  const files = { mimetype: [strToU8('application/epub+zip'), { level: 0 }], 'META-INF/container.xml': strToU8('<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>') };
+  const entries = chapters.map((ch,i) => ({ ...ch, ref: `chapter-${i+1}` }));
+  for (const ch of entries) files[`OEBPS/${ch.ref}.xhtml`] = strToU8(`<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" lang="${book.language === 'en' ? 'en' : 'zh'}"><head><title>${xml(ch.title)}</title></head><body><h1>${xml(ch.title)}</h1>${ch.content.split(/\r?\n/).filter(Boolean).map(p=>`<p>${xml(p)}</p>`).join('')}</body></html>`);
+  files['OEBPS/nav.xhtml'] = strToU8(`<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>目录</title></head><body><nav epub:type="toc" id="toc"><h1>${xml(book.title)}</h1><ol>${entries.map(ch=>`<li><a href="${ch.ref}.xhtml">${xml(ch.title)}</a></li>`).join('')}</ol></nav></body></html>`);
+  files['OEBPS/content.opf'] = strToU8(`<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="book-id">urn:uuid:${xml(book.id)}</dc:identifier><dc:title>${xml(book.title)}</dc:title><dc:language>${book.language === 'en' ? 'en' : 'zh'}</dc:language><meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d{3}Z$/,'Z')}</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>${entries.map(ch=>`<item id="${ch.ref}" href="${ch.ref}.xhtml" media-type="application/xhtml+xml"/>`).join('')}</manifest><spine>${entries.map(ch=>`<itemref idref="${ch.ref}"/>`).join('')}</spine></package>`);
+  return { mime: 'application/epub+zip', body: zipSync(files, { level: 6 }) };
+}

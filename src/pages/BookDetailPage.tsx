@@ -17,7 +17,7 @@ import {
   ArrowLeft, Loader2, AlertCircle, Download, FileText, BookOpen, ChevronRight,
 } from "lucide-react";
 import {
-  fetchBook, fetchTruthFile, fetchChapter, bookExportUrl,
+  fetchBook, fetchTruthFile, fetchChapter, bookExportUrl, fetchJson,
   type BookDetailResponse, type TruthFile, type ExportFormat,
 } from "../lib/api";
 
@@ -54,6 +54,16 @@ export function BookDetailPage() {
   const [openChapter, setOpenChapter] = useState<number | null>(null);
   const [chapterBody, setChapterBody] = useState<{ title?: string; content?: string } | null>(null);
   const [chapterLoading, setChapterLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draftText, setDraftText] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saving, setSaving] = useState(false);
+  async function saveChapter() {
+    if (openChapter === null) return;
+    setSaving(true); setSaveError("");
+    try { await fetchJson(`/books/${encodeURIComponent(bookId)}/chapters/${openChapter}`, { method: "PUT", body: JSON.stringify({ content: draftText, title: chapterBody?.title }) }); setChapterBody(previous => ({ ...previous, content: draftText })); setEditing(false); setData(await fetchBook(bookId)); }
+    catch (e) { setSaveError((e as Error).message); } finally { setSaving(false); }
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -78,7 +88,7 @@ export function BookDetailPage() {
 
   const openCh = useCallback(async (n: number) => {
     if (openChapter === n) { setOpenChapter(null); return; }
-    setOpenChapter(n);
+    setOpenChapter(n); setEditing(false); setSaveError("");
     setChapterLoading(true);
     setChapterBody(null);
     try { setChapterBody(await fetchChapter(bookId, n)); }
@@ -198,8 +208,7 @@ export function BookDetailPage() {
                 </button>
                 {openChapter === c.number && (
                   <div className="bd-chap-b">
-                    {chapterLoading ? <Loader2 size={14} className="spin" />
-                      : <article>{chapterBody?.content ?? "（空）"}</article>}
+                    {chapterLoading ? <Loader2 size={14} className="spin" /> : editing ? <><textarea aria-label="章节正文编辑" style={{ width: "100%", minHeight: 360, font: "inherit", lineHeight: 1.8 }} value={draftText} onChange={e => setDraftText(e.target.value)} /><button className="bd-btn" disabled={saving} onClick={() => void saveChapter()}>保存正文</button><button className="bd-btn" disabled={saving} onClick={() => setEditing(false)}>取消</button></> : <><article>{chapterBody?.content ?? "（空）"}</article><button className="bd-btn" onClick={() => { setDraftText(chapterBody?.content || ""); setEditing(true); }}>编辑正文</button></>}{saveError && <p role="alert">{saveError}</p>}
                   </div>
                 )}
               </div>

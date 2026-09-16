@@ -1,0 +1,86 @@
+export class ApiError extends Error {
+  constructor(status, code, message) { super(message); this.status = status; this.code = code; }
+}
+export const presets = [
+  { service: 'gaotk', label: 'OpenSkoob 中转站', baseUrl: 'https://lai.gaotk.com/v1', group: 'aggregator' },
+  { service: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com/v1', group: 'overseas' },
+  { service: 'deepseek', label: 'DeepSeek', baseUrl: 'https://api.deepseek.com', group: 'china' },
+  { service: 'siliconflow', label: '硅基流动', baseUrl: 'https://api.siliconflow.cn/v1', group: 'china' },
+];
+export const serviceId = entry => entry.service === 'custom' ? `custom:${entry.name}` : entry.service;
+export function config(store) { return store.get('settings', 'models', { services: [], service: null, defaultModel: null, configSource: 'local' }); }
+export function endpoint(value) {
+  let u; try { u = new URL(value); } catch { throw new ApiError(400, 'INVALID_BASE_URL', '请填写完整的模型服务 Base URL'); }
+  if (!['http:', 'https:'].includes(u.protocol) || u.username || u.password || u.search || u.hash) throw new ApiError(400, 'INVALID_BASE_URL', '模型服务地址不能包含凭据、查询参数或片段');
+  return u.href.replace(/\/$/, '');
+}
+export function resolveModel(store, selected = {}, purpose) {
+  const cfg = config(store); const overrides = store.get('settings', 'overrides', {});
+  const override = purpose ? overrides[purpose] : null;
+  // Explicit per-request selection wins. Never swap providers or create a gateway key.
+  const service = selected.service || (override && typeof override === 'object' ? override.service : null) || cfg.service;
+  const model = selected.model || (typeof override === 'string' ? override : override?.model) || cfg.defaultModel;
+  const entry = cfg.services.find(e => serviceId(e) === service);
+  const preset = presets.find(e => e.service === service);
+  if (!service || !model || (!entry && !preset)) throw new ApiError(400, 'MODEL_NOT_CONFIGURED', '请先在设置中配置服务商并选择模型');
+  const baseUrl = endpoint(entry?.baseUrl || preset?.baseUrl);
+  const key = store.secret(service);
+  if (!key && !entry?.allowNoKey) throw new ApiError(400, 'MODEL_KEY_MISSING', '所选服务商尚未配置 API Key');
+  return { ...entry, service, model, baseUrl, key };
+}
+export async function listModels(store, service, input = {}, signal) {
+  const cfg = config(store); const entry = cfg.services.find(e => serviceId(e) === service); const preset = presets.find(e => e.service === service);
+  const baseUrl = endpoint(input.baseUrl || entry?.baseUrl || preset?.baseUrl);
+  const key = input.apiKey || store.secret(service);
+  const response = await fetch(`${baseUrl}/models`, { headers: key ? { Authorization: `Bearer ${key}` } : {}, signal: AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(20000)]), redirect: 'error' });
+  if (!response.ok) throw new ApiError(502, 'MODEL_CATALOG_FAILED', `模型列表请求失败（HTTP ${response.status}），请检查地址和 Key`);
+  const body = await response.json();
+  if (!Array.isArray(body.data)) throw new ApiError(502, 'MODEL_CATALOG_INVALID', '服务商未返回兼容的模型列表，请确认 Base URL 指向 OpenAI 兼容 API');
+  return body.data.filter(m => typeof m.id === 'string').map(m => ({ id: m.id, name: m.name || m.id }));
+}
+export async function complete(store, selected, messages, { signal, onDelta, purpose, json = false } = {}) {
+  const m = resolveModel(store, selected, purpose);
+  const responses = m.apiFormat === 'responses';
+  const stream = m.stream !== false && Boolean(onDelta);
+  const body = responses ? { model: m.model, input: messages, stream, store: false } : { model: m.model, messages, stream };
+  if (m.temperature !== undefined) body.temperature = m.temperature;
+  // JSON is requested in the public task prompt; avoid vendor-specific structured-output fallbacks.
+  const response = await fetch(`${m.baseUrl}/${responses ? 'responses' : 'chat/completions'}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...(m.key ? { Authorization: `Bearer ${m.key}` } : {}) },
+    body: JSON.stringify(body), signal: AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(300000)]), redirect: 'error',
+  });
+  if (!response.ok) throw new ApiError(502, 'MODEL_REQUEST_FAILED', `所选模型请求失败（HTTP ${response.status}），未切换模型或中转站`);
+  let text = '';
+  if (!stream || !response.headers.get('content-type')?.includes('text/event-stream')) {
+    const result = await response.json();
+    if (result.status === 'incomplete' || result.choices?.[0]?.finish_reason === 'length') throw new ApiError(502, 'MODEL_OUTPUT_TRUNCATED', '模型达到输出上限，内容未完成；请调整服务商限制后重试');
+    text = responses ? result.output?.flatMap(o => o.content ?? []).filter(c => c.type === 'output_text').map(c => c.text).join('') ?? result.output_text ?? '' : result.choices?.[0]?.message?.content ?? '';
+    if (onDelta && text) onDelta(text);
+  } else {
+    const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = ''; let finished = false;
+    function consume(line) {
+      line = line.trim(); if (!line.startsWith('data:')) return;
+      const data = line.slice(5).trim(); if (data === '[DONE]') { finished = true; return; }
+      let event; try { event = JSON.parse(data); } catch { throw new ApiError(502, 'MODEL_STREAM_INVALID', '模型流式响应格式损坏'); }
+      if (event.error || event.type === 'response.failed') throw new ApiError(502, 'MODEL_STREAM_FAILED', '模型流式响应中断，请检查服务商记录后重试');
+      if (event.type === 'response.incomplete' || event.response?.status === 'incomplete' || event.choices?.[0]?.finish_reason === 'length') throw new ApiError(502, 'MODEL_OUTPUT_TRUNCATED', '模型达到输出上限，内容未完成；请调整服务商限制后重试');
+      if (event.type === 'response.completed' || event.choices?.[0]?.finish_reason === 'stop') finished = true;
+      const delta = responses ? event.type === 'response.output_text.delta' ? event.delta : '' : event.choices?.[0]?.delta?.content;
+      if (typeof delta === 'string' && delta) { text += delta; onDelta?.(delta); }
+    }
+    try {
+      while (true) {
+        const item = await reader.read(); if (item.done) break;
+        buffer += decoder.decode(item.value, { stream: true }); let end;
+        while ((end = buffer.indexOf('\n')) >= 0) { consume(buffer.slice(0,end)); buffer = buffer.slice(end+1); }
+      }
+      buffer += decoder.decode(); if (buffer.trim()) consume(buffer);
+      if (!finished) throw new ApiError(502, 'MODEL_STREAM_INCOMPLETE', '模型连接提前结束，正文未标记完成；请确认服务商状态后重试');
+    } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
+  }
+  if (typeof text !== 'string' || !text.trim()) throw new ApiError(502, 'MODEL_EMPTY_RESPONSE', '所选模型未返回正文');
+  if (!json) return text;
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  try { const value = JSON.parse(cleaned); if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error(); return value; }
+  catch { throw new ApiError(502, 'MODEL_INVALID_JSON', '模型未返回有效 JSON；已有内容保留，请重试本步或选择支持结构化输出的模型'); }
+}

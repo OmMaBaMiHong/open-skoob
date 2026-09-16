@@ -4,33 +4,40 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:web": "vite",
+    "dev:backend": "node --env-file-if-exists=.env server/index.mjs",
+    "start": "node --env-file-if-exists=.env server/index.mjs",
+    "test": "node --test server/*.test.mjs"
   },
   "dependencies": {
+    "@hono/node-server": "1.19.17",
     "d3": "7.9.0",
+    "fflate": "0.8.3",
+    "hono": "4.13.8",
     "lucide-react": "0.451.0",
     "marked": "18.0.11",
     "qrcode-generator": "1.5.2",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-router-dom": "6.30.6",
+    "react-router-dom": "7.18.4",
     "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/d3": "7.4.3",
+    "@types/node": "22.19.19",
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
     "@vitejs/plugin-react": "4.7.0",
     "typescript": "5.9.3",
-    "vite": "5.4.21",
-    "@types/node": "22.19.19"
+    "vite": "6.4.3"
   },
-  "description": "Customizable Skoob web interface for the official API",
+  "description": "Self-hosted Skoob writing workspace with a local backend and optional cloud engines",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13.0"
   },
   "license": "PolyForm-Noncommercial-1.0.0"
 }

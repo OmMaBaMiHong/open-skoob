@@ -470,7 +470,10 @@ export function WorkbenchPage() {
     }).catch(() => undefined);
     return () => { cancelled = true; };
   }, [bookId, activeStep?.id]);
-  const bookTitle = bookId ? `《${bookId}》` : "尚未命名";
+  const titleOutput = snapshot?.steps.find(step => step.type === "title_synopsis")?.output;
+  const intentOutput = snapshot?.steps.find(step => step.type === "intent")?.output;
+  const savedTitle = titleOutput?.title ?? (intentOutput?.intent as { title?: string } | undefined)?.title;
+  const bookTitle = bookId ? `《${typeof savedTitle === "string" ? savedTitle : bookId}》` : "尚未命名";
 
   /* 章节索引（标题/字数）：目录用，跟着快照的章节步一起刷新。 */
   const [chapterIndex, setChapterIndex] = useState<ReadonlyArray<ChapterSummary>>([]);

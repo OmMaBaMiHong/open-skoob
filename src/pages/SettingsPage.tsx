@@ -248,7 +248,7 @@ function ModelsTab() {
             onSetDefault={(id) => void setDefaultService(id)}
             onChanged={() => void reload()}
           />
-        ) : selected ? (
+        ) : selected && services.some((s) => s.service === selected) ? (
           <ServiceDetail
             key={selected}
             service={services.find((s) => s.service === selected)!}
