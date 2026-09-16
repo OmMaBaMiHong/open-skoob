@@ -38,7 +38,7 @@ test('official account linking, template upload and disconnect enforce cloud own
   await json('/agent-templates','POST',{id:'local-template',name:'侦探模板',content:'自己的角色设定'});
   const uploaded=await json('/local/cloud/templates/agent/local-template/upload','POST',{});assert.equal(uploaded.assetId,'asset-1');assert.equal(uploaded.visibility,'private');
   const received=calls.find(c=>c.path==='/api/v1/agent-templates');assert.equal(received.body.content,'自己的角色设定');assert.equal(received.auth,'Bearer official-token');assert.equal(received.user,'42');assert.ok(!calls.some(c=>c.auth===`Bearer ${auth.token}`));
-  assert.equal((await json('/local/cloud/assets/agent')).capabilities.length,1);assert.equal((await request('/local/cloud/assets/other/publish','POST',{})).status,403);await json('/local/cloud/assets/asset-1/publish','POST',{});
+  assert.equal((await request('/local/cloud/assets/agent')).status,403);assert.equal((await request('/local/cloud/assets/other/publish','POST',{})).status,403);await json('/local/cloud/assets/asset-1/publish','POST',{});
   assert.equal((await json('/tianyan/pipeline/initial','POST',{})).id,'cloud-task');
   confirmAsset=false;await json('/agent-templates','POST',{id:'not-saved',name:'未入库',content:'正文'});assert.equal((await request('/local/cloud/templates/agent/not-saved/upload','POST',{})).status,502);
   expired=true;assert.equal((await request('/local/cloud/status')).status,401);assert.equal((await request('/local/cloud/templates/agent/local-template/upload','POST',{})).status,401);expired=false;

@@ -17,7 +17,7 @@ async function cloudJson(cfg, path, method = 'GET', payload) {
   if (!data || typeof data !== 'object') throw new ApiError(502, 'INVALID_CLOUD_RESPONSE', '官方平台返回格式不正确');
   return data;
 }
-export function mountCloudLink(app, store, env) {
+export function mountCloudLink(app, store, env, access) {
   const pending = new Map(); const uploads = new Set();
   const cfg = () => cloudOptions(store, env);
   function clearPending() { pending.clear(); }
@@ -31,7 +31,7 @@ export function mountCloudLink(app, store, env) {
     return { userId, username: account.user?.displayName || account.user?.username || verified.user.username || '', email: account.user?.email || verified.user.email || '' };
   }
   function save(candidate, user, method) {
-    store.transaction(() => { store.secret('cloud', candidate.key); store.set('settings','cloud',{ baseUrl: candidate.baseUrl, userId: user.userId, username: user.username, email: user.email, method, verifiedAt: new Date().toISOString(), disabled: false }); });
+    store.transaction(() => { store.remove('settings', 'freeAccess'); store.secret('cloud', candidate.key); store.set('settings','cloud',{ baseUrl: candidate.baseUrl, userId: user.userId, username: user.username, email: user.email, method, verifiedAt: new Date().toISOString(), disabled: false }); });
     clearPending();
   }
   async function verifiedConfig() {
@@ -43,7 +43,7 @@ export function mountCloudLink(app, store, env) {
   app.get('/api/v1/local/cloud', c => { const current = cfg(); const saved = store.get('settings','cloud',{}); return c.json({ baseUrl: current.baseUrl, userId: current.userId, configured: Boolean(current.key), last4: current.key.slice(-4), username: saved.username || '', email: saved.email || '', method: saved.method || 'credential', verifiedAt: saved.verifiedAt || null }); });
   app.put('/api/v1/local/cloud', async c => {
     const b = await c.req.json(); const baseUrl = origin(b.baseUrl);
-    if (b.apiKey === '') { store.transaction(() => { store.secret('cloud',''); store.set('settings','cloud',{ baseUrl, disabled: true }); }); clearPending(); return c.json({ ok: true }); }
+    if (b.apiKey === '') { store.transaction(() => { store.remove('settings', 'freeAccess'); store.secret('cloud',''); store.set('settings','cloud',{ baseUrl, disabled: true }); }); clearPending(); return c.json({ ok: true }); }
     const current = cfg(); const key = typeof b.apiKey === 'string' ? b.apiKey.trim() : current.baseUrl === baseUrl ? current.key : '';
     if (!key || key.length > 10000) throw new ApiError(400, 'CLOUD_CREDENTIAL_REQUIRED', '请填写有效凭证；更换云端地址后须重新授权。');
     const candidate = { baseUrl, key, userId: typeof b.userId === 'string' ? b.userId.trim() : '' }; const user = await validate(candidate); save(candidate,user,'credential'); return c.json({ ok: true, user });
@@ -76,7 +76,7 @@ export function mountCloudLink(app, store, env) {
   const kinds = { agent: { collection:'agentTemplates', route:'/agent-templates' }, skill: { collection:'skills', route:'/skills' } };
   function kindOf(value) { const kind = kinds[value]; if (!kind) throw new ApiError(400,'INVALID_TEMPLATE_KIND','请选择智能体模板或技能'); return kind; }
   app.get('/api/v1/local/cloud/templates', c => c.json({ templates: Object.entries(kinds).flatMap(([type,kind]) => store.list(kind.collection).map(item => ({ id:item.id,type,title:item.zhName || item.name || item.id }))) }));
-  app.get('/api/v1/local/cloud/assets/:kind', async c => { kindOf(c.req.param('kind')); const current = await verifiedConfig(); const result = await cloudJson(current,'/capabilities/'+c.req.param('kind')); return c.json({ capabilities:result.capabilities || [],userId:current.userId }); });
+  app.get('/api/v1/local/cloud/assets/:kind', async c => { kindOf(c.req.param('kind')); await access.requireFree(); const current = await verifiedConfig(); const result = await cloudJson(current,'/capabilities/'+c.req.param('kind')); return c.json({ capabilities:result.capabilities || [],userId:current.userId }); });
   app.post('/api/v1/local/cloud/templates/:kind/:id/upload', async c => {
     const type = c.req.param('kind'); const kind = kindOf(type); const id = c.req.param('id'); const item = store.get(kind.collection,id); if (!item) throw new ApiError(404,'TEMPLATE_NOT_FOUND','本地模板不存在');
     const current = await verifiedConfig(); const mapping = digest(JSON.stringify([current.baseUrl,current.userId,type,id]));

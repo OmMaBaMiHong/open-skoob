@@ -259,7 +259,7 @@
     },
     {
       "path": "src/hooks/use-composer-data.ts",
-      "sha256": "85a6174876786b932ef8a33af78beb03622912755bb2bfbd7dd07e0f9d07189f"
+      "sha256": "b78a3c4bd68d4e770d041e19b28db3eb07790981d86820fc2a8b4de00d4b38bf"
     },
     {
       "path": "src/hooks/use-follow-output.ts",
@@ -279,7 +279,7 @@
     },
     {
       "path": "src/hooks/use-membership.ts",
-      "sha256": "30e953c127f6d7ced1a6b247b6746e3c2bf5a6a6484eab067559da18bfb7f25a"
+      "sha256": "aebefa6e22edf7d22570eb8648c29c230069dee7cffad4d07b57a04adf970d89"
     },
     {
       "path": "src/hooks/use-reduced-motion.ts",
@@ -319,7 +319,7 @@
     },
     {
       "path": "src/lib/api-cache.ts",
-      "sha256": "65cb81dcaedef63a2e33730abe098041b2861745ca6302153cbdc72beab09d78"
+      "sha256": "2c23cb0f8112e6fd1f97671565526aecbeec38ad4776522ca3796f951cd41c3e"
     },
     {
       "path": "src/lib/api-origin.ts",
@@ -431,7 +431,7 @@
     },
     {
       "path": "src/pages/AgentsPage.tsx",
-      "sha256": "a83912f841489a3bb7d4a0cd52044d536ea2e34e9a3f07143900b775a2991ddd"
+      "sha256": "f0248ededac3e1892c83ed9fb2ff91a50006fc6030e53bcefdf2176d0e3c840b"
     },
     {
       "path": "src/pages/AutoMode.tsx",
@@ -455,7 +455,7 @@
     },
     {
       "path": "src/pages/CreateHomePage.tsx",
-      "sha256": "26220a43adb274654440b7d9e548161e6e99efd1c6108081f20b850dc3837139"
+      "sha256": "b55c9c069653c6d3e5f4d784dd6b2d84034ebdc51ff903a10bbfc440ae8a1c02"
     },
     {
       "path": "src/pages/DashboardPage.tsx",
@@ -755,7 +755,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "1076ccafe0ab563f18dd98ff44a80a772684c378f18550e7e8f43d8ad57b790e"
+      "sha256": "e8b6b3db99a44c109c090ce5a995ad148265e46b4b6a1205107d19252664d8e3"
     },
     {
       "path": "LICENSE",
@@ -775,7 +775,7 @@
     },
     {
       "path": "docs/api-integration.md",
-      "sha256": "655d600aa69f0366cc54e50abf590c4ab0c74094145da147a35e3c54301105d0"
+      "sha256": "1b67abbbb7506287d3b1a334cd4548a5a34b73a373dd812918787f406fa10b41"
     },
     {
       "path": ".github/assets/wechat-pay.jpg",
@@ -795,7 +795,7 @@
     },
     {
       "path": "src/SelfHost.tsx",
-      "sha256": "7ee6f74bc8de2be5a9e7c07ae8c97a6fd3ef74692900509ccbdce5e61b373c2b"
+      "sha256": "c496f07d91f38563dc90c6884985c67249b46aa06a1b01c8ca0a17ab64fbe249"
     },
     {
       "path": "src/self-host.css",
@@ -819,7 +819,7 @@
     },
     {
       "path": "server/general.mjs",
-      "sha256": "47b48d53f8e75d3a5da4b6ebb60d109fbec3923473c490f7b442273e53dcab42"
+      "sha256": "84f1084818e4f538324a10832422647b748e145c7d793f7b957ecf3f1e54ee29"
     },
     {
       "path": "server/models.mjs",
@@ -835,7 +835,7 @@
     },
     {
       "path": "server/app.mjs",
-      "sha256": "e5881f5e3dba87f138def9d92c75a46c5735ac2f926ab5411a44d93fa7169d53"
+      "sha256": "a25752a9d2ddf250e178de21263b1db77f7b3ee2095c4d74554cc3c9fadaa838"
     },
     {
       "path": "server/creation.mjs",
@@ -851,7 +851,7 @@
     },
     {
       "path": "server/context.mjs",
-      "sha256": "f87f28d9c2bb2b47398747a9b5ee3fc05f32acf529ac6d34c5d5ca8d5ed3975a"
+      "sha256": "c5042b3f00823c58c4a7ad5acc8411232a82ac22ab3a7488331edb31c2c7b536"
     },
     {
       "path": "server/film.mjs",
@@ -871,15 +871,15 @@
     },
     {
       "path": "server/cloud-link.mjs",
-      "sha256": "123f1f1281a6e09aa610b7041bd036e2c588810ea8d38ce863a4e03258d6b6de"
+      "sha256": "960608b67c7576831e83ee6455b925f34ed36b6400ab9fd5908e0eae55b616ce"
     },
     {
       "path": "server/cloud-link.test.mjs",
-      "sha256": "9a1c9ca0fa44dd8af6b61abe67770a4ee5cc0a66861611cccfdd4a9d1b3194b1"
+      "sha256": "fd58bd6f7a996b59f393bb9492fb17f07179f36e276aeca33988ed051d9279ca"
     },
     {
       "path": "src/CloudConnection.tsx",
-      "sha256": "8d3a358496a48586dcaba96613a7a16c2dba0cdd81aa580d2924d6cff21606ef"
+      "sha256": "3c376c19542267f95af3b8a8a1ff3fe704c42072a16b5f3ad3f27e972392f299"
     },
     {
       "path": "src/pages/CloudAuthorizePage.tsx",
@@ -888,6 +888,22 @@
     {
       "path": "src/styles/cloud-connect.css",
       "sha256": "e7f0fda880b62a0725789a32fa5a84d104b13ab6454f5f40854e80734065580d"
+    },
+    {
+      "path": "server/free-access.mjs",
+      "sha256": "03c21a64e30ee6fc627608684d12f6d749b3436e306d41aa1e76ea28b911045d"
+    },
+    {
+      "path": "server/free-access.test.mjs",
+      "sha256": "3f3a4ac58b6e9129310a8b7ee41dba83886bc4d26337f40143bfad1c6f7eb82d"
+    },
+    {
+      "path": "server/cloud-catalog.mjs",
+      "sha256": "224dda3b605e156da1ad4d5ce321c9de2508584e9d24d216d5cb59b0da86a0de"
+    },
+    {
+      "path": "src/cloud-access.tsx",
+      "sha256": "3c483feaabae1cc84b96f129244bb507d33d147d623e94a8d2c08cf898731ef4"
     }
   ]
 }
