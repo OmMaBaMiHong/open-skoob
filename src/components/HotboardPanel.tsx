@@ -69,10 +69,14 @@ function strategyLabelOf(card: BrainstormCard): string {
 export function HotboardPanel({
   onPick,
   onScan,
+  hotboardEnabled = true,
+  brainstormEnabled = true,
 }: {
   /** 选中一条内容 → 变成创作方向（父级把它填进输入框）；cardId = 脑洞卡埋点/溯源透传。 */
   readonly onPick: (seed: string, cardId?: string) => void;
   readonly onScan?: () => void;
+  readonly hotboardEnabled?: boolean;
+  readonly brainstormEnabled?: boolean;
 }) {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<ReadonlyArray<HotboardCategory>>([]);
@@ -108,19 +112,20 @@ export function HotboardPanel({
     }
   }, []);
 
-  useEffect(() => { void load(category); }, [category, load]);
+  useEffect(() => { if (hotboardEnabled) void load(category); }, [category, load, hotboardEnabled]);
 
   /* ── 聚合总榜（只拉一次） ── */
   useEffect(() => {
+    if (!hotboardEnabled) return;
     void fetchHotAggregate(10)
       .then(setTopics)
       .catch(() => setTopics([]))
       .finally(() => setAggLoading(false));
-  }, []);
+  }, [hotboardEnabled]);
 
   /* ── AI 脑洞图文轨道（板块顶部；加载即记曝光，匿名计） ── */
   const brainstormRail = useRef<HTMLDivElement>(null);
-  const brainstorm = useBrainstormCards(() => !brainstormRail.current || brainstormRail.current.scrollLeft < 1);
+  const brainstorm = useBrainstormCards(() => !brainstormRail.current || brainstormRail.current.scrollLeft < 1, brainstormEnabled);
   const brainstormCards = brainstorm.cards;
   /** 点卡先看完整案例，再决定开写。 */
   const [openCase, setOpenCase] = useState<BrainstormCard | null>(null);
@@ -153,6 +158,7 @@ export function HotboardPanel({
   /* ── 搜索（防抖） ── */
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!hotboardEnabled) return;
     const kw = keyword.trim();
     if (!kw) { setMatches(null); setSearching(false); return; }
     setSearching(true);
@@ -164,7 +170,7 @@ export function HotboardPanel({
         .finally(() => setSearching(false));
     }, 420);
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
-  }, [keyword]);
+  }, [keyword, hotboardEnabled]);
 
   /** 漏斗埋点：热点条目被使用 / 被查看（原文链接）。失败静默。 */
   const trackItem = (eventType: "item_click" | "item_view", title: string): void => {
@@ -278,6 +284,7 @@ export function HotboardPanel({
         </div>
       )}
 
+      {hotboardEnabled && <>
       {/* ── 头部：搜索 + 分类 ── */}
       <div className="hb-top">
         <div className="hb-search">
@@ -473,6 +480,7 @@ export function HotboardPanel({
 
         </>
       )}
+      </>}
           {/* 灵感方案预览 */}
           {previewHotTopic && (
             <InspirationPreview

@@ -9,6 +9,9 @@ import { selectedContext } from './context.mjs';
 import { cloudCatalog } from './cloud-catalog.mjs';
 import { freeAccess } from './free-access.mjs';
 
+const plan = { id: 'free', name: 'Free 免费套餐', enabled: true, entitlements: ['brainstorm.read', 'hotboard.read', 'templates.read'] };
+const grant = { ready: true, plan, entitlements: plan.entitlements, isMember: false };
+
 test('Free onboarding validates the upstream owner/group/status and gates real catalogs without granting membership', async t => {
   const calls = []; let active = true, reachable = true, accountId = '42';
   const free = { id: 7, user_id: 42, key: 'fixture-free-secret', name: 'My Free', status: 'active', group_id: 2, group: { id: 2, name: 'openskoob-free', status: 'active', rate_multiplier: 0 }, expires_at: null };
@@ -26,6 +29,8 @@ test('Free onboarding validates the upstream owner/group/status and gates real c
     if (req.url === '/api/v1/keys/8') return reply({ code: 0, data: { ...key, id: 8, group: { ...key.group, name: 'paid' } } });
     if (req.url === '/api/v1/keys/9') return reply({ code: 0, data: { ...key, id: 9, user_id: 99 } });
     if (req.url === '/api/v1/keys/10') return reply({ code: 0, data: { ...key, id: 10, expires_at: '2020-01-01T00:00:00Z' } });
+    if (req.url === '/api/v1/open/access?refresh=1') return reply(grant);
+    if (req.url.startsWith('/api/v1/open/catalog/')) { assert.equal(req.headers.authorization, `Bearer ${free.key}`); req.url = req.url.replace('/api/v1/open/catalog/', '/api/v1/'); }
     if (req.url === '/api/v1/genres') return reply({ genres: [{ id: 'same', name: 'Official genre' }] });
     if (req.url === '/api/v1/genres/same/cluster') return reply({ profile: { name: 'Official genre' }, body: 'official writing guidance', books: [], agents: [] });
     if (req.url === '/api/v1/agent-templates') return reply({ templates: [{ id: 'same', name: 'Official template', content: 'public character' }] });
@@ -66,7 +71,7 @@ test('Free onboarding validates the upstream owner/group/status and gates real c
   assert.equal((await request('/genres/official%3Asame', 'DELETE')).status, 403); assert.equal(instance.store.get('genres', 'same').name, 'Local genre');
   const catalog = cloudCatalog(instance.store, {}, freeAccess(instance.store, {}));
   assert.match(await selectedContext(instance.store, { capabilityRefs: [{ kind: 'genre', id: 'official:same' }] }, catalog.material), /official writing guidance/);
-  assert.ok(calls.filter(c => c.path === '/api/v1/genres').every(c => !c.auth));
+  assert.ok(calls.filter(c => c.path === '/api/v1/open/catalog/genres').every(c => c.auth === `Bearer ${free.key}`));
   assert.ok(!calls.some(c => c.auth === `Bearer ${login.token}`)); assert.ok(!calls.some(c => c.path.startsWith('/api/v1/keys') && c.method !== 'GET'));
   await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} }); assert.equal((await json('/local/cloud/access')).ready, true);
   active = false;
@@ -96,14 +101,13 @@ test('pasted official Key connects without account login and never becomes a pla
   let revoked = false; const calls = [];
   t.mock.method(globalThis, 'fetch', async (url, init) => {
     const path = String(url); const auth = new Headers(init.headers).get('authorization'); calls.push({ path, auth });
-    if (path.startsWith('https://lai.gaotk.com/')) {
-      if (auth === 'Bearer invalid' || revoked) return Response.json({ error: 'INVALID_KEY' }, { status: 401 });
-      if (path.endsWith('/sub2api/billing')) return Response.json({ object: 'sub2api.key_billing', schema_version: 1, billing_scope: 'token', effective_rate_multiplier: 0 });
-      if (path.endsWith('/models')) return auth === 'Bearer expired' ? Response.json({ error: 'API_KEY_EXPIRED' }, { status: 403 }) : Response.json({ data: [{ id: 'free-model' }] });
+    if (path === 'https://skoob.cc/api/v1/open/access?refresh=1') {
+      if (['Bearer invalid', 'Bearer expired'].includes(auth) || revoked) return Response.json({ error: { code: 'FREE_KEY_INVALID' } }, { status: 401 });
+      return Response.json(grant);
     }
-    assert.equal(auth, null, 'model/local credentials must never enter public catalog requests');
-    if (path === 'https://skoob.cc/api/v1/genres') return Response.json({ genres: [{ id: 'official-genre', name: '官方流派' }] });
-    if (path === 'https://skoob.cc/api/v1/tianmo/brainstorm/cards') return Response.json({ cards: [{ id: 'official-card' }] });
+    assert.equal(auth, 'Bearer valid-free-model-key', 'catalogs must use the selected official Key, never a local token');
+    if (path === 'https://skoob.cc/api/v1/open/catalog/genres') return Response.json({ genres: [{ id: 'official-genre', name: '官方流派' }] });
+    if (path === 'https://skoob.cc/api/v1/open/catalog/tianmo/brainstorm/cards') return Response.json({ cards: [{ id: 'official-card' }] });
     throw new Error('unexpected upstream request');
   });
   assert.equal((await request('/tianmo/brainstorm/cards')).status, 403);
@@ -133,4 +137,31 @@ test('pasted official Key connects without account login and never becomes a pla
   await json('/local/cloud/key', 'DELETE'); assert.equal((await json('/local/cloud/access')).ready, false);
   assert.equal(instance.store.secret(connected.service), 'valid-free-model-key');
   assert.equal((await json('/services/config')).service, 'custom:mine');
+});
+
+test('cloud rejects revoked rights even with a cached local grant and local libraries remain usable', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'skoob-rights-test-'));
+  const instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  t.after(async () => { await instance.close(); rmSync(dir, { recursive: true, force: true }); });
+  const session = await (await instance.app.request('/api/v1/local/session', { method: 'POST', headers: { 'X-Skoob-Local': '1' } })).json();
+  const request = (path, method = 'GET', body) => instance.app.request('/api/v1' + path, { method, headers: { Authorization: `Bearer ${session.token}`, 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  let rights = [...plan.entitlements]; const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    const path = new URL(url).pathname; calls.push(path);
+    assert.equal(new Headers(init.headers).get('authorization'), 'Bearer fixture-key');
+    if (path === '/api/v1/open/access') return Response.json({ ...grant, plan: { ...plan, entitlements: rights }, entitlements: rights });
+    assert.ok(path.startsWith('/api/v1/open/catalog/'), 'never fall back to anonymous website APIs');
+    if (!rights.includes('brainstorm.read') && path.endsWith('/brainstorm/cards')) return Response.json({ error: { code: 'FREE_ENTITLEMENT_REQUIRED', entitlement: 'brainstorm.read' } }, { status: 403 });
+    return Response.json({ cards: [{ id: 'card' }] });
+  });
+  assert.equal((await request('/local/cloud/key', 'POST', { apiKey: 'fixture-key' })).status, 200);
+  assert.equal((await request('/tianmo/brainstorm/cards')).status, 200);
+  rights = ['hotboard.read'];
+  assert.equal((await request('/tianmo/brainstorm/cards')).status, 403);
+  const status = await (await request('/local/cloud/access?refresh=1')).json();
+  assert.deepEqual(status.entitlements, ['hotboard.read']);
+  instance.store.set('genres', 'mine', { id: 'mine', name: 'Local' });
+  assert.deepEqual((await (await request('/genres')).json()).genres.map(x => x.id), ['mine']);
+  assert.equal((await (await request('/account/membership')).json()).isMember, false);
+  assert.ok(!calls.includes('/api/v1/open/catalog/genres'));
 });

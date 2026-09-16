@@ -56,6 +56,7 @@ export interface ComposerData {
 export function useComposerData(opts: { graphId?: string; preserveExplicitModel?: boolean } = {}): ComposerData {
   const { graphId, preserveExplicitModel = false } = opts;
   const cloud = useCloudAccess();
+  const templatesAllowed = cloud.ready && cloud.entitlements.includes("templates.read");
   const [skills, setSkills] = useState<ReadonlyArray<SkillInfo>>([]);
   const [agents, setAgents] = useState<ReadonlyArray<GraphAgent>>([]);
   const [genres, setGenres] = useState<ReadonlyArray<GenreInfo>>([]);
@@ -151,15 +152,15 @@ export function useComposerData(opts: { graphId?: string; preserveExplicitModel?
 
   useEffect(() => {
     let alive = true;
-    if (!cloud.ready) { setSkills(previous => previous.filter(x => !x.id.startsWith("official:"))); setGenres(previous => previous.filter(x => !x.id.startsWith("official:"))); setTemplates(previous => previous.filter(x => !x.id.startsWith("official:"))); }
+    if (!templatesAllowed) { setSkills(previous => previous.filter(x => !x.id.startsWith("official:"))); setGenres(previous => previous.filter(x => !x.id.startsWith("official:"))); setTemplates(previous => previous.filter(x => !x.id.startsWith("official:"))); }
     void Promise.all([
       fetchSkills().catch(() => []),
       fetchGenres().catch(() => []),
       fetchAgentTemplates().catch(() => []),
       readAuth() ? fetchProjectLlm().catch(() => null) : Promise.resolve(null),
-    ]).then(([sk, ge, tp, lm]) => { if (alive) { setSkills(cloud.ready ? sk : sk.filter(x => !x.id.startsWith("official:"))); setGenres(cloud.ready ? ge : ge.filter(x => !x.id.startsWith("official:"))); setTemplates(cloud.ready ? tp : tp.filter(x => !x.id.startsWith("official:"))); setLlm(lm); } });
+    ]).then(([sk, ge, tp, lm]) => { if (alive) { setSkills(templatesAllowed ? sk : sk.filter(x => !x.id.startsWith("official:"))); setGenres(templatesAllowed ? ge : ge.filter(x => !x.id.startsWith("official:"))); setTemplates(templatesAllowed ? tp : tp.filter(x => !x.id.startsWith("official:"))); setLlm(lm); } });
     return () => { alive = false; };
-  }, [cloud.ready]);
+  }, [templatesAllowed]);
 
   /**
    * 智能体单独拉：本书优先，**本书为空时回落全量**。

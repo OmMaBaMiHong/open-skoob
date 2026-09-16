@@ -75,6 +75,12 @@ export function createApplication({ dataDir, origins = [], cloudEnv = process.en
     c.set('loginId', auth.id); await next();
   });
   app.get('/api/v1/account/status', c => c.json({ loggedIn: true, user: { username: '本地工作室', role: 'owner', platformAdmin: false }, expiresAt: null, sub2apiUrl: 'https://gaotk.com' }));
+  app.get('/api/v1/account/free-plan', async c => {
+    const cfg = cloudOptions(store, cloudEnv);
+    const response = await fetch(endpoint(cfg.baseUrl) + '/api/v1/account/free-plan', { signal: AbortSignal.timeout(10000), redirect: 'error' });
+    if (!response.ok) throw new ApiError(502, 'FREE_PLAN_UNAVAILABLE', '暂时无法读取官方套餐配置');
+    return c.json(await response.json());
+  });
   app.get('/api/v1/account/membership', async c => {
     const cfg = cloudOptions(store, cloudEnv); let cloud = null;
     if (cfg.key && cfg.userId) {
@@ -83,7 +89,8 @@ export function createApplication({ dataDir, origins = [], cloudEnv = process.en
         if (response.ok) cloud = await response.json();
       } catch { /* Cloud unavailable must never lock local work. */ }
     }
-    return c.json({ loggedIn: true, isMember: cloud?.isMember === true, entitlements: Array.isArray(cloud?.entitlements) ? cloud.entitlements : [], plan: cloud?.plan ?? null, expiresAt: cloud?.expiresAt ?? null, stale: Boolean(cfg.key && !cloud) });
+    const free = await access.status();
+    return c.json({ freePlan: free.ready ? free.plan : null, freeEntitlements: free.ready ? free.entitlements : [], loggedIn: true, isMember: cloud?.isMember === true, entitlements: Array.isArray(cloud?.entitlements) ? cloud.entitlements : [], plan: cloud?.plan ?? null, expiresAt: cloud?.expiresAt ?? null, stale: Boolean(cfg.key && !cloud) });
   });
   app.post('/api/v1/account/logout', c => { store.remove('logins', c.get('loginId')); deleteCookie(c, 'skoob_local', { path: '/' }); return c.json({ ok: true }); });
   const access = freeAccess(store, cloudEnv); const catalog = cloudCatalog(store, cloudEnv, access);
@@ -246,7 +253,7 @@ export function createApplication({ dataDir, origins = [], cloudEnv = process.en
   app.get('/api/v1/agent-prototypes', async c => c.json({ prototypes: await catalog.list('prototypes') }));
   app.get('/api/v1/genres/:id/cluster', async c => {
     const id = c.req.param('id');
-    if (isOfficialId(id)) return c.json(await catalog.read('/genres/' + encodeURIComponent(id.slice(CLOUD_ID.length)) + '/cluster', true));
+    if (isOfficialId(id)) return c.json(await catalog.read('/genres/' + encodeURIComponent(id.slice(CLOUD_ID.length)) + '/cluster'));
     const item = store.get('genres', id); if (!item) throw new ApiError(404, 'GENRE_NOT_FOUND', '本地流派不存在');
     return c.json({ genreId: id, profile: item, body: item.body || item.content || '', books: [], agents: [] });
   });

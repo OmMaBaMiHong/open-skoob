@@ -15,15 +15,16 @@ export function SelfHost({ children }: { children: ReactNode }) {
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const navigate = useNavigate(); const location = useLocation();
-  const [access, setAccess] = useState({ ready: false, identity: "", message: "填写有效官方 Key 后，即可查看官方脑洞、热点和模板。" });
+  const [access, setAccess] = useState({ ready: false, identity: "", entitlements: [] as string[], planName: "Free 免费套餐", message: "填写有效官方 Key 后，即可查看官方脑洞、热点和模板。" });
   const accessIdentity = useRef(""); const accessRequest = useRef(0);
   const [choice, setChoice] = useState<string | null>(null); const [loaded, setLoaded] = useState(false);
   async function refreshAccess(force = false) {
     const seq = ++accessRequest.current;
     const result = await request(`local/cloud/access${force ? "?refresh=1" : ""}`).catch(() => ({ ready: false, message: "暂时无法验证官方 Free Key，请重试；本地创作仍可使用。" }));
     if (seq !== accessRequest.current || !readAuth()) return;
-    const next = { ready: result.ready === true, identity: result.identity || "", message: result.message || "官方免费内容已连接" };
-    if (accessIdentity.current !== next.identity) { accessIdentity.current = next.identity; resetApiCacheIdentity(); window.dispatchEvent(new Event("skoob:cloud-account-changed")); }
+    const next = { ready: result.ready === true, identity: result.identity || "", entitlements: result.ready && Array.isArray(result.entitlements) ? result.entitlements as string[] : [], planName: result.plan?.name || "Free 免费套餐", message: result.message || "官方免费内容已连接" };
+    const fingerprint = JSON.stringify([next.identity, next.entitlements, next.planName]);
+    if (accessIdentity.current !== fingerprint) { accessIdentity.current = fingerprint; resetApiCacheIdentity(); window.dispatchEvent(new Event("skoob:cloud-account-changed")); }
     setAccess(next);
   }
   useEffect(() => {
@@ -58,10 +59,10 @@ export function SelfHost({ children }: { children: ReactNode }) {
   if (checking) return <div className="local-entry">正在连接本地工作室…</div>;
   if (!ready) return <main className="local-entry"><section className="local-panel"><h1>暂时无法连接工作室</h1><p role="alert">{error}</p><button onClick={() => window.location.reload()}>重新连接</button></section></main>;
   if (!loaded) return <div className="local-entry">正在确认工作室接入状态…</div>;
-  return <CloudAccessContext.Provider value={{ ready: access.ready, message: access.message, connect: () => setOpen(true) }}>
+  return <CloudAccessContext.Provider value={{ ready: access.ready, entitlements: access.entitlements, planName: access.planName, message: access.message, connect: () => setOpen(true) }}>
     {!choice && !access.ready ? <><CloudConnection initial onChanged={refreshAccess} onClose={() => void chooseLocal()} />{error && <p role="alert">{error}</p>}</> : <>
       <div className="local-bar"><span>本地工作室 · {access.ready ? "官方内容已连接" : "本地模式"}</span><div><button onClick={() => setOpen(true)}>{access.ready ? "官方连接与 Key" : "填写官方 Key / 授权登录"}</button><a href="https://gaotk.com/keys" target="_blank" rel="noreferrer">领取 Free Key</a></div></div>
-      <div className="local-app">{location.pathname === "/" && choice === "local" ? <Navigate to="/settings/models" replace /> : !access.ready && location.pathname === "/scan" ? <CloudAccessPrompt /> : children}</div>
+      <div className="local-app">{location.pathname === "/" && choice === "local" ? <Navigate to="/settings/models" replace /> : !access.entitlements.includes("hotboard.read") && location.pathname === "/scan" ? <CloudAccessPrompt /> : children}</div>
       {open && <CloudConnection onChanged={refreshAccess} onClose={() => { setOpen(false); void refreshAccess(); }} />}
     </>}
 

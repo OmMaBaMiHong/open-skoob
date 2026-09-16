@@ -20,6 +20,8 @@ import {
   startOAuthLogin, openRelay, openCheckout,
   consumeOAuthResult, oauthReasonText,
 } from "../lib/account";
+import { apiUrl } from "../lib/api-origin";
+import { authHeaders } from "../lib/auth-storage";
 import { PLANS, SUB2API_PLAN_IDS, MEMBER_BENEFITS } from "../types/plans";
 
 /** 会员门跳过来时带的原因，用来在页头点明"为什么看到这一页"。 */
@@ -36,6 +38,12 @@ export function PricingPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [free, setFree] = useState<{ plan: { name: string; enabled: boolean; entitlements: string[] }; entitlements: Record<string, string> } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void fetch(apiUrl("/api/v1/account/free-plan"), { headers: authHeaders() }).then(response => response.ok ? response.json() : null).then(data => { if (alive && data?.plan?.id === "free") setFree(data); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   const gate = params.get("from");
   const gateText = gate ? GATE_REASONS[gate] : null;
@@ -134,6 +142,13 @@ export function PricingPage() {
           ))}
         </div>
 
+        {free?.plan.enabled && <section className="pr-plan" aria-label="Free 免费套餐">
+          <div className="pr-plan-head"><h2>{free.plan.name}</h2><small>官网可匿名预览；本地部署填写有效官方 Key 后享受 Free 权益</small></div>
+          <div className="pr-plan-price"><strong>¥0</strong><span>云端浏览权益</span></div>
+          <ul className="pr-plan-benefits">{free.plan.entitlements.map(code => <li key={code}><Check size={13} /><span>{free.entitlements[code] || code}</span></li>)}</ul>
+          <p>模型用量单独计费；付费引擎与上传权限以账号实际授权为准。</p>
+          <a className="pr-plan-btn" href="https://gaotk.com/keys" target="_blank" rel="noreferrer">领取 Free Key <ExternalLink size={12} /></a>
+        </section>}
         <div className="pr-plans">
           {PLANS.map((plan) => (
             <div key={plan.id} className={`pr-plan ${plan.featured ? "is-featured" : ""}`}>

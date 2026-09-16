@@ -83,7 +83,7 @@
     },
     {
       "path": "src/components/HotboardPanel.tsx",
-      "sha256": "5f1cbe5cc5d32c60398253bb5b733011003f27720a68ad15a8ded439de8d5621"
+      "sha256": "db96d4b67ebc6ac282563b17a4d0e65916429e5d9d93f99701dcd658bae4b3ba"
     },
     {
       "path": "src/components/IcpNotice.tsx",
@@ -255,11 +255,11 @@
     },
     {
       "path": "src/hooks/use-brainstorm-cards.ts",
-      "sha256": "99d975151dc8f2d66835eb3fe4eab5db8b8c27809703c32c19c6e406adbf1740"
+      "sha256": "82b36bff3c4498ef7b27e02c206fb25afba1eb5b7e97e422b89950a028a2a381"
     },
     {
       "path": "src/hooks/use-composer-data.ts",
-      "sha256": "b78a3c4bd68d4e770d041e19b28db3eb07790981d86820fc2a8b4de00d4b38bf"
+      "sha256": "3f920d0ba6d415436bd22f92f2fc28d5e0813faab76683b004f2fc7bc8ebfe9c"
     },
     {
       "path": "src/hooks/use-follow-output.ts",
@@ -431,7 +431,7 @@
     },
     {
       "path": "src/pages/AgentsPage.tsx",
-      "sha256": "f0248ededac3e1892c83ed9fb2ff91a50006fc6030e53bcefdf2176d0e3c840b"
+      "sha256": "e0bf4fe033292872a73dd0e7775b8a5be32bebb0634c09679715d2f62a9f3e82"
     },
     {
       "path": "src/pages/AutoMode.tsx",
@@ -455,7 +455,7 @@
     },
     {
       "path": "src/pages/CreateHomePage.tsx",
-      "sha256": "b55c9c069653c6d3e5f4d784dd6b2d84034ebdc51ff903a10bbfc440ae8a1c02"
+      "sha256": "a40360c71ef91509c65ce08bb881add9ff41d7f36448c8fad8d080f577889c24"
     },
     {
       "path": "src/pages/DashboardPage.tsx",
@@ -495,7 +495,7 @@
     },
     {
       "path": "src/pages/PricingPage.tsx",
-      "sha256": "2d3d14e47c226e457f066e4ced46076f39e0261b6ba6fe6553b27c0cd039caa6"
+      "sha256": "d889137b8a5dff97165e67407047a59c6e6fec9983ec6c450604931a6c7817de"
     },
     {
       "path": "src/pages/ProjectSettingsPage.tsx",
@@ -755,7 +755,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "185d4f0f2f205f6a494ad538b61bd6a01a3f04f4e790aa4b5c7045161de198d9"
+      "sha256": "40b6b663d0f42ba076f5ed0466145f46fc3dd51689faea8643a8e826ee44f31e"
     },
     {
       "path": "LICENSE",
@@ -795,7 +795,7 @@
     },
     {
       "path": "src/SelfHost.tsx",
-      "sha256": "ae84df2c87b0c08660cdd8853b0ec91b91ad42ca8163bc8ad2e111e86ff91437"
+      "sha256": "b5f5433ec65300b69aef0bdaeeacb0e95e40ecad1e6ff3c58fabd7681f72cdee"
     },
     {
       "path": "src/self-host.css",
@@ -815,7 +815,7 @@
     },
     {
       "path": "server/cloud.mjs",
-      "sha256": "f34c6193c40f472f9893d2a3717dce6e96301ff5820322e2db32a52ca354cbcb"
+      "sha256": "a637670d37b72614e14a50e5f91968824ce753c92b7d7fd946675fd4cd030e62"
     },
     {
       "path": "server/general.mjs",
@@ -835,7 +835,7 @@
     },
     {
       "path": "server/app.mjs",
-      "sha256": "c4d5c65aa4dad635d92946ea8343b01d836c0407d8ea866b9f4edb5025891cb5"
+      "sha256": "53d24738ca2b5b3a345c89789c5ff48d49b61247725810a82b5082ef442f2239"
     },
     {
       "path": "server/creation.mjs",
@@ -879,7 +879,7 @@
     },
     {
       "path": "src/CloudConnection.tsx",
-      "sha256": "4d177ed69a7b64e8916e56e22874e2e45e101503c90fc1512afab7ee635f9eca"
+      "sha256": "cfb7c7c4c818986155bccce81561b8604d2d276865d90dda96f25eb32e818b4b"
     },
     {
       "path": "src/pages/CloudAuthorizePage.tsx",
@@ -891,19 +891,19 @@
     },
     {
       "path": "server/free-access.mjs",
-      "sha256": "f3fc043fc8b493c42e2cd3292cad8a5bcb66eb78a560c18cf338bcc8882c264f"
+      "sha256": "d0a2189efca40a9f5c24ea8c26af23a0a5e370373dd498e55687cea192080768"
     },
     {
       "path": "server/free-access.test.mjs",
-      "sha256": "2a1cc83796a52f8326a1d356ae1b88fcb0808bf709a49eb7e4d6a25f4c68dd90"
+      "sha256": "2c30c974838861a785082de48a6b666f8b4654d7caf22869d096179e6fc17207"
     },
     {
       "path": "server/cloud-catalog.mjs",
-      "sha256": "224dda3b605e156da1ad4d5ce321c9de2508584e9d24d216d5cb59b0da86a0de"
+      "sha256": "19ba4b7261414418a3d21b6a9e548e846288869c3b301f746ba86f43b7936d8b"
     },
     {
       "path": "src/cloud-access.tsx",
-      "sha256": "3c483feaabae1cc84b96f129244bb507d33d147d623e94a8d2c08cf898731ef4"
+      "sha256": "85ec1a357c1840e2e09790f70bfe36dd70925032680a2d6808f75f1956e9212a"
     }
   ]
 }

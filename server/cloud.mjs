@@ -16,12 +16,15 @@ export async function forwardCloud(request, store, env, publicRead = false) {
   const base = endpoint(cfg.baseUrl);
   if (new URL(base).pathname !== '/') throw new ApiError(400, 'INVALID_CLOUD_URL', '云端地址必须是源地址，不附加路径');
   incoming.searchParams.delete('access_token'); incoming.searchParams.delete('uid');
-  const headers = new Headers(publicRead ? {} : { Authorization: `Bearer ${cfg.key}` });
+  const selection = store.get('settings', 'freeAccess');
+  const key = publicRead ? selection && store.secret(selection.service) : cfg.key;
+  if (!key) throw new ApiError(403, 'FREE_KEY_REQUIRED', '请先连接官方 Key');
+  const headers = new Headers({ Authorization: `Bearer ${key}` });
   if (!publicRead && cfg.userId) headers.set('X-Skoob-User', cfg.userId);
   for (const name of ['content-type', 'accept', 'idempotency-key', 'last-event-id']) {
     const value = request.headers.get(name); if (value) headers.set(name, value);
   }
-  const response = await fetch(base + incoming.pathname + incoming.search, {
+  const response = await fetch(base + (publicRead ? incoming.pathname.replace('/api/v1/', '/api/v1/open/catalog/') : incoming.pathname) + incoming.search, {
     method: request.method, headers, ...(request.method !== 'GET' && request.method !== 'HEAD' ? { body: await request.arrayBuffer() } : {}),
     signal: AbortSignal.any([request.signal, AbortSignal.timeout(300000)]), redirect: 'error',
   });
