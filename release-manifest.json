@@ -115,7 +115,7 @@
     },
     {
       "path": "src/components/ServiceQuickLinks.tsx",
-      "sha256": "15cb589cfc07349ce0bc872738e7495e2e6061c3479f58cb0237883dac54a223"
+      "sha256": "504e94cadcbe83d69b39d7dc1e587acfeb3f282e32917446c15d92cdfe8310dc"
     },
     {
       "path": "src/components/SiteWorkbenchShowcase.tsx",
