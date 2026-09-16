@@ -3,7 +3,7 @@ import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { streamSSE } from 'hono/streaming';
-import { randomBytes, randomUUID, createHash, scryptSync, timingSafeEqual } from 'node:crypto';
+import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { Store } from './store.mjs';
 import { ApiError, config, presets, serviceId, endpoint, resolveModel, listModels, complete } from './models.mjs';
 import { exportBook } from './export.mjs';
@@ -28,21 +28,9 @@ async function body(c) {
   catch { throw new ApiError(400, 'INVALID_JSON', '请求体必须是 JSON 对象'); }
 }
 
-export function createApplication({ dataDir, password, origins = [], cloudEnv = process.env } = {}) {
+export function createApplication({ dataDir, origins = [], cloudEnv = process.env } = {}) {
   if (!dataDir) throw new Error('dataDir is required');
   const store = new Store(dataDir); const app = new Hono();
-  let firstRunPassword = null;
-  let savedAuth = store.get('settings', 'auth');
-  if (!savedAuth || password) {
-    const candidate = password || randomBytes(16).toString('base64url');
-    if (password && password.length < 10) throw new Error('SKOOB_LOCAL_PASSWORD must have at least 10 characters');
-    if (!savedAuth || !timingSafeEqual(Buffer.from(savedAuth.digest, 'hex'), scryptSync(candidate, savedAuth.salt, 32))) {
-      const salt = randomBytes(16).toString('hex'); savedAuth = { salt, digest: scryptSync(candidate, salt, 32).toString('hex') };
-      store.set('settings', 'auth', savedAuth);
-      for (const login of store.list('logins')) store.remove('logins', login.id);
-    }
-    if (!password) firstRunPassword = candidate;
-  }
   const subscribers = new Set(); let closed = false;
   function emit(event, data) {
     if (closed) return;
@@ -60,22 +48,22 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
   app.use('*', async (c, next) => { c.header('X-Content-Type-Options', 'nosniff'); c.header('Referrer-Policy', 'no-referrer'); c.header('Cache-Control', 'no-store'); await next(); });
   app.use('/api/*', bodyLimit({ maxSize: 90 * 1024 * 1024, onError: c => c.json({ error: { code: 'TOO_LARGE', message: '上传内容过大' } }, 413) }));
   app.use('/api/*', async (c, next) => {
+    const url = new URL(c.req.url);
+    if (!['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && !origins.includes(url.origin)) return c.json({ error: { code: 'HOST_DENIED', message: '请从本机地址访问工作室' } }, 403);
+    if (c.req.header('sec-fetch-site') === 'cross-site') return c.json({ error: { code: 'ORIGIN_DENIED', message: '请直接打开本地工作室' } }, 403);
     const origin = c.req.header('origin');
     if (origin && !allowedOrigin(origin, c)) return c.json({ error: { code: 'ORIGIN_DENIED', message: '此网站来源未获本地服务授权' } }, 403);
     await next();
   });
-  app.use('/api/*', cors({ origin: (origin, c) => allowedOrigin(origin, c) ? origin : undefined, credentials: true, allowHeaders: ['Content-Type', 'Authorization', 'X-Skoob-User', 'X-Skoob-Refresh', 'Idempotency-Key', 'X-Upload-Id', 'X-File-Name'], allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }));
+  app.use('/api/*', cors({ origin: (origin, c) => allowedOrigin(origin, c) ? origin : undefined, credentials: true, allowHeaders: ['Content-Type', 'Authorization', 'X-Skoob-User', 'X-Skoob-Refresh', 'Idempotency-Key', 'X-Upload-Id', 'X-File-Name', 'X-Skoob-Local'], allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }));
   app.onError((error, c) => { if (error instanceof SyntaxError || error.name === 'ZodError') return c.json({ error: { code: 'INVALID_INPUT', message: '请求数据格式不正确' } }, 400); return c.json({ error: { code: error.code || 'INTERNAL_ERROR', message: error instanceof ApiError ? error.message : '本地服务执行失败，请查看服务终端并检查输入' } }, error instanceof ApiError ? error.status : 500); });
   app.get('/api/health', c => c.json({ ok: true, mode: 'self-hosted' }));
   app.get('/api/v1/local/info', c => c.json({ mode: 'self-hosted', singleOwner: true }));
-  let failedLogins = 0; let loginWindow = Date.now();
-  app.post('/api/v1/local/login', async c => {
-    if (Date.now() - loginWindow > 60000) { failedLogins = 0; loginWindow = Date.now(); }
-    if (failedLogins >= 20) throw new ApiError(429, 'LOGIN_RATE_LIMIT', '尝试过多，请一分钟后重试');
-    const b = await body(c); const candidate = typeof b.password === 'string' && b.password.length <= 1024 ? b.password : '';
-    if (!timingSafeEqual(Buffer.from(savedAuth.digest, 'hex'), scryptSync(candidate, savedAuth.salt, 32))) { failedLogins++; throw new ApiError(401, 'LOGIN_FAILED', '本地访问密码不正确'); }
+  // Local session protects requests from other websites; it is not a user login.
+  app.post('/api/v1/local/session', async c => {
+    if (c.req.header('X-Skoob-Local') !== '1') throw new ApiError(403, 'LOCAL_SESSION_DENIED', '请从本地工作室建立连接');
     const token = randomBytes(32).toString('base64url'); const id = hash(token); const expiresAt = Date.now() + 7 * 86400000;
-    store.set('logins', id, { id, expiresAt }); failedLogins = 0;
+    store.set('logins', id, { id, expiresAt });
     setCookie(c, 'skoob_local', token, { httpOnly: true, sameSite: 'Strict', secure: new URL(c.req.url).protocol === 'https:', path: '/', maxAge: 7 * 86400 });
     return c.json({ token, userId: 'local', expiresAt });
   });
@@ -83,7 +71,7 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
     const header = c.req.header('authorization');
     const token = header?.startsWith('Bearer ') ? header.slice(7) : c.req.path === '/api/v1/events' ? c.req.query('access_token') : getCookie(c, 'skoob_local');
     const auth = token ? store.get('logins', hash(token)) : null;
-    if (!auth || auth.expiresAt <= Date.now()) return c.json({ error: { code: 'LOGIN_REQUIRED', message: '请使用本地访问密码登录' } }, 401);
+    if (!auth || auth.expiresAt <= Date.now()) return c.json({ error: { code: 'LOGIN_REQUIRED', message: '本地连接已过期，请刷新工作室' } }, 401);
     c.set('loginId', auth.id); await next();
   });
   app.get('/api/v1/account/status', c => c.json({ loggedIn: true, user: { username: '本地工作室', role: 'owner', platformAdmin: false }, expiresAt: null, sub2apiUrl: 'https://gaotk.com' }));
@@ -101,12 +89,14 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
   const access = freeAccess(store, cloudEnv); const catalog = cloudCatalog(store, cloudEnv, access);
   mountCloudLink(app, store, cloudEnv, access);
   app.get('/api/v1/local/cloud/access', async c => c.json(await access.status(c.req.query('refresh') === '1')));
+  app.post('/api/v1/local/cloud/key', async c => c.json(await access.connect((await body(c)).apiKey)));
+  app.delete('/api/v1/local/cloud/key', c => { store.remove('settings', 'freeAccess'); return c.json({ ok: true }); });
   app.get('/api/v1/local/cloud/keys', async c => c.json(await access.keys(c.req.query('page'))));
   app.post('/api/v1/local/cloud/keys/select', async c => c.json(await access.select((await body(c)).keyId)));
   app.get('/api/v1/local/onboarding', c => c.json({ choice: store.get('settings', 'onboarding')?.choice || null }));
   app.put('/api/v1/local/onboarding', async c => { const b = await body(c); if (!['official', 'local'].includes(b.choice)) throw new ApiError(400, 'INVALID_CHOICE', '请选择官方 Free 或自己的模型'); store.set('settings', 'onboarding', { choice: b.choice }); return c.json({ ok: true }); });
   app.get('/api/v1/tianyan/agents', async (c, next) => { if (c.req.query('graphId')) return next(); return c.json({ agents: store.list('agents') }); });
-  app.use('/api/v1/*', async (c, next) => { if (isCloudPath(c.req.path)) { if (c.req.method === 'GET' && isPublicCloudRead(c.req.path)) await access.requireFree(); return forwardCloud(c.req.raw, store, cloudEnv); } await next(); });
+  app.use('/api/v1/*', async (c, next) => { if (isCloudPath(c.req.path)) { const publicRead = c.req.method === 'GET' && isPublicCloudRead(c.req.path); if (publicRead) await access.requireFree(); return forwardCloud(c.req.raw, store, cloudEnv, publicRead); } await next(); });
 
   function services() {
     const entries = config(store).services; const ids = new Map(presets.map(p => [p.service, { ...p, connected: Boolean(store.secret(p.service)) }]));
@@ -272,5 +262,5 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
   mountTheater(app, store, creation, emit);
   const closeGeneral = mountGeneral(app, store, catalog.material);
   app.notFound(c => c.json({ error: { code: 'NOT_FOUND', message: '本地接口不存在' } }, 404));
-  return { app, store, creation, firstRunPassword, async close() { await closeGeneral(); for (const job of jobs.values()) job.controller.abort(); await Promise.allSettled([...jobs.values()].map(j => j.work)); await creation.close(); closed = true; subscribers.clear(); store.close(); } };
+  return { app, store, creation, async close() { await closeGeneral(); for (const job of jobs.values()) job.controller.abort(); await Promise.allSettled([...jobs.values()].map(j => j.work)); await creation.close(); closed = true; subscribers.clear(); store.close(); } };
 }

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { ApiError, config, endpoint, serviceId } from './models.mjs';
 import { cloudOptions } from './cloud.mjs';
 
@@ -41,9 +42,25 @@ export function freeAccess(store, env) {
     if (String(key.id) !== String(id) || !eligible(key, cfg)) throw new ApiError(403, 'FREE_KEY_INVALID', '所选 Key 必须属于当前账号、有效且位于官方 openskoob-free 分组。');
     unchanged(cfg); return key;
   }
+  // A pasted model Key is verified by the relay, never treated as an account JWT.
+  async function modelKey(key) {
+    const base = 'https://lai.gaotk.com';
+    const billing = await json(base, '/v1/sub2api/billing', key);
+    if (billing.object !== 'sub2api.key_billing' || billing.schema_version !== 1 || billing.billing_scope !== 'token') throw new ApiError(403, 'FREE_KEY_INVALID', '请填写官方中转站的有效 API Key。');
+    // Unlike usage/billing, models also checks expiration and key/group availability.
+    const models = await json(base, '/v1/models', key);
+    if (!Array.isArray(models)) throw new ApiError(502, 'FREE_VERIFY_FAILED', '官方模型目录校验失败，请稍后重试。');
+    const id = createHash('sha256').update(key).digest('hex');
+    return { id, name: '官方 API Key', last4: key.slice(-4), eligible: true, status: 'active' };
+  }
   async function verify() {
     const selection = store.get('settings', 'freeAccess');
-    if (!selection || !store.secret(selection.service)) throw new ApiError(403, 'FREE_KEY_REQUIRED', '领取并选择有效 Free Key 后，即可查看官方脑洞、热点和模板。');
+    if (!selection || !store.secret(selection.service)) throw new ApiError(403, 'FREE_KEY_REQUIRED', '填写有效官方 Key（含 Free Key），或授权后选择 Key，即可查看官方脑洞、热点和模板。');
+    if (selection.method === 'key') {
+      const key = await modelKey(store.secret(selection.service));
+      if (key.id !== selection.keyId) throw new ApiError(403, 'FREE_KEY_CHANGED', '官方 Key 已改变，请重新连接。');
+      return { ready: true, identity: `official-key:${key.id}`, key, service: selection.service };
+    }
     const cfg = await account();
     if (selection.baseUrl !== cfg.baseUrl || selection.userId !== cfg.userId) throw new ApiError(403, 'FREE_KEY_REQUIRED', '账号已改变，请为当前账号选择 Free Key。');
     const key = await selected(cfg, selection.keyId);
@@ -68,6 +85,18 @@ export function freeAccess(store, env) {
   }
   return {
     requireFree,
+    async connect(raw) {
+      if (typeof raw !== 'string' || !raw.trim() || raw.length > 10000) throw new ApiError(400, 'INVALID_KEY', '请填写官方 API Key');
+      const secret = raw.trim(); const before = fingerprint(); const key = await modelKey(secret);
+      if (before !== fingerprint()) throw new ApiError(409, 'CLOUD_CONNECTION_CHANGED', '连接已改变，请重试。');
+      const name = `Skoob 官方 #${key.id.slice(0, 12)}`; const service = `custom:${name}`;
+      const models = config(store);
+      if (store.secret(service) && store.secret(service) !== secret) throw new ApiError(409, 'SERVICE_EXISTS', '同名模型配置已存在，请先在模型设置中处理。');
+      if (!models.services.some(e => serviceId(e) === service)) models.services.push({ service: 'custom', name, baseUrl: 'https://lai.gaotk.com/v1', apiFormat: 'chat', stream: true });
+      store.transaction(() => { store.secret(service, secret); store.set('settings', 'models', models); store.set('settings', 'freeAccess', { method: 'key', keyId: key.id, service }); store.set('settings', 'onboarding', { choice: 'official' }); });
+      cached = { identity: fingerprint(), value: { ready: true, identity: `official-key:${key.id}`, key, service }, expiresAt: Date.now() + 30000 };
+      return { ok: true, service };
+    },
     async status(force = false) { try { return await requireFree(force); } catch (e) { if (!(e instanceof ApiError)) throw e; return { ready: false, code: e.code, message: e.message }; } },
     async keys(page = 1) {
       const cfg = await account();

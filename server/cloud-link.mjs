@@ -31,7 +31,7 @@ export function mountCloudLink(app, store, env, access) {
     return { userId, username: account.user?.displayName || account.user?.username || verified.user.username || '', email: account.user?.email || verified.user.email || '' };
   }
   function save(candidate, user, method) {
-    store.transaction(() => { store.remove('settings', 'freeAccess'); store.secret('cloud', candidate.key); store.set('settings','cloud',{ baseUrl: candidate.baseUrl, userId: user.userId, username: user.username, email: user.email, method, verifiedAt: new Date().toISOString(), disabled: false }); });
+    store.transaction(() => { if (store.get('settings', 'freeAccess')?.method !== 'key') store.remove('settings', 'freeAccess'); store.secret('cloud', candidate.key); store.set('settings','cloud',{ baseUrl: candidate.baseUrl, userId: user.userId, username: user.username, email: user.email, method, verifiedAt: new Date().toISOString(), disabled: false }); });
     clearPending();
   }
   async function verifiedConfig() {

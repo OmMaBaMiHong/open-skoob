@@ -755,7 +755,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "e8b6b3db99a44c109c090ce5a995ad148265e46b4b6a1205107d19252664d8e3"
+      "sha256": "185d4f0f2f205f6a494ad538b61bd6a01a3f04f4e790aa4b5c7045161de198d9"
     },
     {
       "path": "LICENSE",
@@ -767,7 +767,7 @@
     },
     {
       "path": ".env.example",
-      "sha256": "e32b7434c893a4c7f18f1332853d10bc5d5c7b8c6e1aed29a7749f1d841b44ca"
+      "sha256": "1989465b53913173290f6b98cafab2fd4f98fcf28678efae205bb5ec8c6b477a"
     },
     {
       "path": "vite.config.ts",
@@ -775,7 +775,7 @@
     },
     {
       "path": "docs/api-integration.md",
-      "sha256": "1b67abbbb7506287d3b1a334cd4548a5a34b73a373dd812918787f406fa10b41"
+      "sha256": "f530369ffef525a10657e7263b8a626e235c785a055a68677c9f8b29c135f408"
     },
     {
       "path": ".github/assets/wechat-pay.jpg",
@@ -795,11 +795,11 @@
     },
     {
       "path": "src/SelfHost.tsx",
-      "sha256": "c496f07d91f38563dc90c6884985c67249b46aa06a1b01c8ca0a17ab64fbe249"
+      "sha256": "ae84df2c87b0c08660cdd8853b0ec91b91ad42ca8163bc8ad2e111e86ff91437"
     },
     {
       "path": "src/self-host.css",
-      "sha256": "69a43c110b33546f9181a6c1064b79755fdd9d567a3d422dcbc79605a4dfe5ad"
+      "sha256": "f4f2f7359e905bbbd6f637fa84fc4d370363acf329470b5d1f5ec4ff7f95ef54"
     },
     {
       "path": "Dockerfile",
@@ -815,7 +815,7 @@
     },
     {
       "path": "server/cloud.mjs",
-      "sha256": "4564f42e7708dc3456268224f77ec7cc5a8d6592aa9dfb3c23551a2b6e6bb68f"
+      "sha256": "f34c6193c40f472f9893d2a3717dce6e96301ff5820322e2db32a52ca354cbcb"
     },
     {
       "path": "server/general.mjs",
@@ -831,11 +831,11 @@
     },
     {
       "path": "server/index.mjs",
-      "sha256": "9c087e56b22afc4a575d8d678e1b2efab6bac8e5e905f7dc5074f77b662b285a"
+      "sha256": "6cc3c915963909dc7d10d31302179a94e334783f7b3dfd912a4bbeaa3f2cf71a"
     },
     {
       "path": "server/app.mjs",
-      "sha256": "a25752a9d2ddf250e178de21263b1db77f7b3ee2095c4d74554cc3c9fadaa838"
+      "sha256": "c4d5c65aa4dad635d92946ea8343b01d836c0407d8ea866b9f4edb5025891cb5"
     },
     {
       "path": "server/creation.mjs",
@@ -843,7 +843,7 @@
     },
     {
       "path": "server/app.test.mjs",
-      "sha256": "a04802e1d54ccedf113ee568139690527724853a10b74716698e4938da3e779d"
+      "sha256": "03375fc4012e63a1b6e0923f76a16c2483caf1eb1b99ee0adf7b1bab1acf6324"
     },
     {
       "path": "scripts/dev.mjs",
@@ -871,15 +871,15 @@
     },
     {
       "path": "server/cloud-link.mjs",
-      "sha256": "960608b67c7576831e83ee6455b925f34ed36b6400ab9fd5908e0eae55b616ce"
+      "sha256": "932d16df7155c8a3880e1c8fffad4768b24af6ca2e0646df960d706c3f821388"
     },
     {
       "path": "server/cloud-link.test.mjs",
-      "sha256": "fd58bd6f7a996b59f393bb9492fb17f07179f36e276aeca33988ed051d9279ca"
+      "sha256": "2e7ca6a4fc3996dde59b214d5e6d5b1124ecd77ecbc94306e1e63e2e3235b549"
     },
     {
       "path": "src/CloudConnection.tsx",
-      "sha256": "3c376c19542267f95af3b8a8a1ff3fe704c42072a16b5f3ad3f27e972392f299"
+      "sha256": "4d177ed69a7b64e8916e56e22874e2e45e101503c90fc1512afab7ee635f9eca"
     },
     {
       "path": "src/pages/CloudAuthorizePage.tsx",
@@ -891,11 +891,11 @@
     },
     {
       "path": "server/free-access.mjs",
-      "sha256": "03c21a64e30ee6fc627608684d12f6d749b3436e306d41aa1e76ea28b911045d"
+      "sha256": "f3fc043fc8b493c42e2cd3292cad8a5bcb66eb78a560c18cf338bcc8882c264f"
     },
     {
       "path": "server/free-access.test.mjs",
-      "sha256": "3f3a4ac58b6e9129310a8b7ee41dba83886bc4d26337f40143bfad1c6f7eb82d"
+      "sha256": "2a1cc83796a52f8326a1d356ae1b88fcb0808bf709a49eb7e4d6a25f4c68dd90"
     },
     {
       "path": "server/cloud-catalog.mjs",
