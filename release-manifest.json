@@ -3,7 +3,7 @@
   "files": [
     {
       "path": "src/App.tsx",
-      "sha256": "bf7fe8bf1358e93ed40419bcda7cd1bb0eef6761e0fa4db28a557f77f0112752"
+      "sha256": "4a88975b3f4ba6f32f550170ed83be7270abf0eaefe4b2231df20981748e7497"
     },
     {
       "path": "src/components/AgentActivity.tsx",
@@ -755,7 +755,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "696e4155a3f8bba2d8714a9a62e1e3d17cb02a65ddd8b0ff8f29c04d04b6c334"
+      "sha256": "1076ccafe0ab563f18dd98ff44a80a772684c378f18550e7e8f43d8ad57b790e"
     },
     {
       "path": "LICENSE",
@@ -775,7 +775,7 @@
     },
     {
       "path": "docs/api-integration.md",
-      "sha256": "27f935c15b30d083730f9e676bb1b91b00d2fa934ee93efd61ff2103a8299d8c"
+      "sha256": "655d600aa69f0366cc54e50abf590c4ab0c74094145da147a35e3c54301105d0"
     },
     {
       "path": ".github/assets/wechat-pay.jpg",
@@ -795,11 +795,11 @@
     },
     {
       "path": "src/SelfHost.tsx",
-      "sha256": "1043e150de131879f7006da26c44d5e5f0e8beded1b5d254d948610180ad6d9f"
+      "sha256": "7ee6f74bc8de2be5a9e7c07ae8c97a6fd3ef74692900509ccbdce5e61b373c2b"
     },
     {
       "path": "src/self-host.css",
-      "sha256": "7d109fdcb7c1b306f82530f028dd049de38ff0349f878c45e9ca8aa08080c75e"
+      "sha256": "69a43c110b33546f9181a6c1064b79755fdd9d567a3d422dcbc79605a4dfe5ad"
     },
     {
       "path": "Dockerfile",
@@ -815,7 +815,7 @@
     },
     {
       "path": "server/cloud.mjs",
-      "sha256": "899e5c7ff143c9ec49b75c43370b0b8eeca09b1d3352a08254de77bde4d1acfe"
+      "sha256": "4564f42e7708dc3456268224f77ec7cc5a8d6592aa9dfb3c23551a2b6e6bb68f"
     },
     {
       "path": "server/general.mjs",
@@ -835,7 +835,7 @@
     },
     {
       "path": "server/app.mjs",
-      "sha256": "2e751c87d237251a909f6df1f16e0bb6d8e817779d47055fbfce0a085fde25a8"
+      "sha256": "e5881f5e3dba87f138def9d92c75a46c5735ac2f926ab5411a44d93fa7169d53"
     },
     {
       "path": "server/creation.mjs",
@@ -843,7 +843,7 @@
     },
     {
       "path": "server/app.test.mjs",
-      "sha256": "1d61da3a7a320fd4b9cd979aa8fa20afbfd381ddd4ca64355db64a9bec072383"
+      "sha256": "a04802e1d54ccedf113ee568139690527724853a10b74716698e4938da3e779d"
     },
     {
       "path": "scripts/dev.mjs",
@@ -868,6 +868,26 @@
     {
       "path": "server/export.mjs",
       "sha256": "25a0305990344ce8bd7a4ea165482c55b526e6fdf09435c7ec74d90f2fcf2786"
+    },
+    {
+      "path": "server/cloud-link.mjs",
+      "sha256": "123f1f1281a6e09aa610b7041bd036e2c588810ea8d38ce863a4e03258d6b6de"
+    },
+    {
+      "path": "server/cloud-link.test.mjs",
+      "sha256": "9a1c9ca0fa44dd8af6b61abe67770a4ee5cc0a66861611cccfdd4a9d1b3194b1"
+    },
+    {
+      "path": "src/CloudConnection.tsx",
+      "sha256": "8d3a358496a48586dcaba96613a7a16c2dba0cdd81aa580d2924d6cff21606ef"
+    },
+    {
+      "path": "src/pages/CloudAuthorizePage.tsx",
+      "sha256": "54648aa0e74d1a795dfe380f06a1f4906eced55748d7aedba054f841300b6e3f"
+    },
+    {
+      "path": "src/styles/cloud-connect.css",
+      "sha256": "e7f0fda880b62a0725789a32fa5a84d104b13ab6454f5f40854e80734065580d"
     }
   ]
 }

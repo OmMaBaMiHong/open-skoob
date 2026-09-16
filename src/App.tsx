@@ -27,6 +27,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ImportPage } from "./pages/ImportPage";
 import { ProjectSettingsPage } from "./pages/ProjectSettingsPage";
 import { TruthFilesPage } from "./pages/TruthFilesPage";
+import { CloudAuthorizePage } from "./pages/CloudAuthorizePage";
 import { SiteHomePage } from "./pages/SiteHomePage";
 import { SiteDocsPage } from "./pages/SiteDocsPage";
 
@@ -99,6 +100,7 @@ export function App() {
       <Route path="/pricing" element={<PricingPage />} />
 
       {/* 官网（营销站）与文档中心：自带领航/返回，不套 AppLayout 顶栏 */}
+      <Route path="/site/connect" element={<CloudAuthorizePage />} />
       <Route path="/site" element={<SiteHomePage />} />
       <Route path="/site/docs" element={<SiteDocsPage />} />
       <Route path="/site/docs/:docId" element={<SiteDocsPage />} />

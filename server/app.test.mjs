@@ -139,8 +139,11 @@ test('cloud lifecycle preserves upstream task IDs and separates local and cloud 
   const calls = [];
   const upstream = createServer(async (req, res) => {
     let body = ''; for await (const chunk of req) body += chunk;
+    res.setHeader('Content-Type', 'application/json');
+    if (req.url === '/api/v1/account/verify-key') { res.end(JSON.stringify({ok:true,user:{id:'cloud-owner'}})); return; }
+    if (req.url === '/api/v1/account/status') { res.end(JSON.stringify({loggedIn:true,user:{id:'cloud-owner'}})); return; }
     calls.push({ path: req.url, authorization: req.headers.authorization, user: req.headers['x-skoob-user'], cookie: req.headers.cookie, body });
-    res.setHeader('Content-Type', 'application/json'); res.setHeader('Set-Cookie', 'cloud-secret=must-not-forward');
+    res.setHeader('Set-Cookie', 'cloud-secret=must-not-forward');
     res.end(JSON.stringify({ id: 'remote-123', status: 'paused' }));
   });
   await new Promise(resolve => upstream.listen(0, '127.0.0.1', resolve)); t.after(() => new Promise(resolve => upstream.close(resolve)));

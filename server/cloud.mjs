@@ -6,7 +6,7 @@ export function isCloudPath(path) {
 }
 export function cloudOptions(store, env = process.env) {
   const saved = store.get('settings', 'cloud', {});
-  return { baseUrl: saved.baseUrl || env.SKOOB_CLOUD_URL || 'https://skoob.cc', key: store.secret('cloud') || env.SKOOB_CLOUD_API_KEY || '', userId: saved.userId || env.SKOOB_CLOUD_USER_ID || '' };
+  return { baseUrl: saved.baseUrl || env.SKOOB_CLOUD_URL || 'https://skoob.cc', key: saved.disabled ? '' : store.secret('cloud') || env.SKOOB_CLOUD_API_KEY || '', userId: saved.userId || env.SKOOB_CLOUD_USER_ID || '' };
 }
 export async function forwardCloud(request, store, env) {
   const incoming = new URL(request.url);

@@ -12,6 +12,7 @@ import { mountFilms } from './film.mjs';
 import { mountTheater } from './theater.mjs';
 import { mountGeneral } from './general.mjs';
 import { Creation } from './creation.mjs';
+import { mountCloudLink } from './cloud-link.mjs';
 import { cloudOptions, isCloudPath, forwardCloud } from './cloud.mjs';
 
 const hash = text => createHash('sha256').update(text).digest('hex');
@@ -95,16 +96,7 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
     return c.json({ loggedIn: true, isMember: cloud?.isMember === true, entitlements: Array.isArray(cloud?.entitlements) ? cloud.entitlements : [], plan: cloud?.plan ?? null, expiresAt: cloud?.expiresAt ?? null, stale: Boolean(cfg.key && !cloud) });
   });
   app.post('/api/v1/account/logout', c => { store.remove('logins', c.get('loginId')); deleteCookie(c, 'skoob_local', { path: '/' }); return c.json({ ok: true }); });
-  app.get('/api/v1/local/cloud', c => { const cfg = cloudOptions(store, cloudEnv); return c.json({ baseUrl: cfg.baseUrl, userId: cfg.userId, configured: Boolean(cfg.key), last4: cfg.key.slice(-4) }); });
-  app.put('/api/v1/local/cloud', async c => {
-    const b = await body(c); const baseUrl = endpoint(b.baseUrl || 'https://skoob.cc');
-    if (new URL(baseUrl).pathname !== '/') throw new ApiError(400, 'INVALID_CLOUD_URL', '请填写云端源地址，不附加路径');
-    const userId = typeof b.userId === 'string' ? b.userId.trim() : '';
-    if (userId && !/^[a-zA-Z0-9_-]{1,128}$/.test(userId)) throw new ApiError(400, 'INVALID_USER_ID', '云端用户 ID 格式不正确');
-    store.set('settings', 'cloud', { baseUrl, userId });
-    if (typeof b.apiKey === 'string') store.secret('cloud', b.apiKey.trim());
-    return c.json({ ok: true });
-  });
+  mountCloudLink(app, store, cloudEnv);
   app.get('/api/v1/tianyan/agents', async (c, next) => { if (c.req.query('graphId')) return next(); return c.json({ agents: store.list('agents') }); });
   app.use('/api/v1/*', async (c, next) => { if (isCloudPath(c.req.path)) return forwardCloud(c.req.raw, store, cloudEnv); await next(); });
 
