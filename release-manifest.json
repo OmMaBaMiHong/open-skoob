@@ -879,7 +879,7 @@
     },
     {
       "path": "src/CloudConnection.tsx",
-      "sha256": "0ca84f0351334f7867e80a65e24fd02648550ea84061e9751d76fe3926f2defe"
+      "sha256": "6e3d073a1a11ba403a32e093d7e7f04fb7add0a4ee9e3154d3ce3224434eedde"
     },
     {
       "path": "src/pages/CloudAuthorizePage.tsx",

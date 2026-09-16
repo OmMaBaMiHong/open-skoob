@@ -58,7 +58,7 @@ export function CloudConnection({ onClose, onChanged, initial = false }: { initi
       <label>官方 API Key<input type="password" autoFocus={initial} value={apiKey} onChange={e => setApiKey(e.target.value)} autoComplete="off" placeholder="在这里粘贴你的官方 Key" required /></label>
       <button type="submit" disabled={busy || !apiKey.trim()}>{busy ? "正在连接…" : "验证 Key，进入工作室"}</button>
     </form>
-    <p className="local-help">Free 套餐包含官方模型接入；验证 Key 后加载这把 Key 的模型列表。免费模型的范围与额度以中转站为准，付费模型按所选 Key 计费。四大核心引擎按套餐使用，可通过官方授权登录同步权益、上传自己的模板。</p>
+    <p className="local-help">Free 套餐包含官方模型接入；验证 Key 后加载这把 Key 的模型列表。标注“本机直连”的免费模型由本地服务直接请求上游，额度按上游出口 IP 限制；付费模型按所选 Key 在中转站计费。四大核心引擎按套餐使用，可通过官方授权登录同步权益、上传自己的模板。</p>
     {error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
     <details><summary>高级连接设置</summary><label>服务源地址<input aria-label="官方服务地址" type="url" value={cloud.baseUrl} onChange={e=>{setCloud({...cloud,baseUrl:e.target.value});setFlow(null);}} /></label></details>
     <div className="cloud-connect-methods"><button type="button" disabled={busy} onClick={()=>void authorize()}>{cloud.configured?"重新授权 / 切换账号":"或使用官方账号授权登录"}</button></div>
