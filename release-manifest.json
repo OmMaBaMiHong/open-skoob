@@ -755,7 +755,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "b734ee54ba333e849eae6a3f5764fde8d4086287ea00b4e99cbe2ae929d911d8"
+      "sha256": "6f3b246c65b737bc9ae2c06233a39352af9325a55a06299be21bec35d8c15dbb"
     },
     {
       "path": "LICENSE",
@@ -980,6 +980,10 @@
     {
       "path": "scripts/test-desktop-bundle.mjs",
       "sha256": "59da832f62049e6ede5715315eca545179e4c7a401f05122db79b1b817780ce5"
+    },
+    {
+      "path": ".github/workflows/desktop-release.yml",
+      "sha256": "d9fcc8eab4592e31709139d6a802c0ac39c75a9d0e52d560ffb8e45b9dc2bf4f"
     }
   ]
 }

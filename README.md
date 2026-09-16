@@ -171,6 +171,8 @@ QQ 群：**1107955676**（焚决 skoob · 小说 Agent 创作群）
 
 ### 桌面客户端构建
 
+直接安装：[下载 Windows / macOS 客户端测试版](https://github.com/OmMaBaMiHong/open-skoob/releases/tag/desktop-v0.1.0-beta.1)。Apple Silicon 和 Intel Mac 请分别选择对应安装包。
+
 使用 Tauri 2 封装同一套公开前后端，支持 Windows x64、macOS Apple Silicon / Intel。运行时随安装包提供，使用者不需要安装 Node 或 Docker；首次启动可填写官方 Key，或选择自己的模型。作品和配置保存在系统应用数据目录，升级安装包不会覆盖本地作品。
 
 开发者安装 [Tauri 构建环境](https://v2.tauri.app/start/prerequisites/) 后运行 `npm ci`、`npm run desktop:build`。CI 的 Desktop packages 工作流分别构建三个平台，安装包通过 GitHub Releases 分发。首批为测试版；未配置开发者签名和 Apple 公证时，应按发布说明识别系统安装提示。
