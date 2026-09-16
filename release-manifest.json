@@ -927,7 +927,7 @@
     },
     {
       "path": ".github/workflows/desktop.yml",
-      "sha256": "40cc4c617b208a8fcf8555a0da48517ddc1fc6640a79720edfe4a055425bf5c8"
+      "sha256": "d2a3bf81cd42aa9d16a75582eb7633f65fc4884bf776782ffe85dca39c878346"
     },
     {
       "path": "src-tauri/Cargo.toml",

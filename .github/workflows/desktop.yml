@@ -39,7 +39,13 @@ jobs:
       - run: npm run desktop:build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
       - name: Verify signed macOS backend
         if: runner.os == 'macOS'
-        run: node scripts/test-desktop-bundle.mjs src-tauri/target/${{ matrix.target }}/release/bundle/macos/Open-Skoob.app
+        run: |
+          image=$(find src-tauri/target/${{ matrix.target }}/release/bundle/dmg -name '*.dmg' -print -quit)
+          mount="$RUNNER_TEMP/skoob-package"
+          mkdir -p "$mount"
+          hdiutil attach "$image" -readonly -nobrowse -mountpoint "$mount"
+          trap 'hdiutil detach "$mount"' EXIT
+          node scripts/test-desktop-bundle.mjs "$mount/Open-Skoob.app"
       - uses: actions/upload-artifact@v4
         with:
           name: Open-Skoob-${{ matrix.target }}
