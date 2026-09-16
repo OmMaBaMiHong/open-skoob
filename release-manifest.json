@@ -755,7 +755,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "3be4934568df7da9b2b3bcdcd3e7870300b67a4bb5ef8df7af06803154bf4f04"
+      "sha256": "2ed20db3e60fc4ef0c86555e1108a8fb3592f5a3c81d996584f9f2665edab9c1"
     },
     {
       "path": "LICENSE",
@@ -776,6 +776,18 @@
     {
       "path": "docs/api-integration.md",
       "sha256": "6da6e279f293da8269f6b56349a2077acdfe4c1814f93bc39c9691f8fc35737f"
+    },
+    {
+      "path": ".github/assets/wechat-pay.jpg",
+      "sha256": "efc3853cf8e4cbfc57c6c6c765300acf09dbcf5dde54f7e98fecd2962438eafe"
+    },
+    {
+      "path": ".github/assets/qq-group.jpg",
+      "sha256": "1738447ee974bc38122ad4f9bf42954505970fc9b1b7373f001558839306f5c9"
+    },
+    {
+      "path": ".github/assets/contact-wechat.jpg",
+      "sha256": "45a50906c6ea9abdfc14caabefcd8f392e1ba23932dd8b42dfe116092d28df83"
     }
   ]
 }
