@@ -20,6 +20,8 @@ export async function forwardCloud(request, store, env, publicRead = false) {
   const key = publicRead ? selection && store.secret(selection.service) : cfg.key;
   if (!key) throw new ApiError(403, 'FREE_KEY_REQUIRED', '请先连接官方 Key');
   const headers = new Headers({ Authorization: `Bearer ${key}` });
+  const preview = publicRead && request.method === 'GET' && /^\/api\/v1\/tianmo\/brainstorm\/cards\/bs-[A-Za-z0-9_-]+\/image$/.test(incoming.pathname) && Boolean(incoming.searchParams.get('v'));
+  if (preview && request.headers.get('if-none-match')) headers.set('If-None-Match', request.headers.get('if-none-match'));
   if (!publicRead && cfg.userId) headers.set('X-Skoob-User', cfg.userId);
   for (const name of ['content-type', 'accept', 'idempotency-key', 'last-event-id']) {
     const value = request.headers.get(name); if (value) headers.set(name, value);
@@ -30,5 +32,10 @@ export async function forwardCloud(request, store, env, publicRead = false) {
   });
   const out = new Headers({ 'Cache-Control': 'no-store' });
   for (const name of ['content-type', 'content-disposition']) { const value = response.headers.get(name); if (value) out.set(name, value); }
+  if (preview && [200, 304].includes(response.status) && response.headers.get('content-type') === 'image/webp') {
+    out.set('Cache-Control', response.headers.get('cache-control')?.includes('immutable') ? 'private, max-age=31536000, immutable' : 'private, no-cache');
+    out.set('Vary', 'Cookie, Authorization');
+    const etag = response.headers.get('etag'); if (etag) out.set('ETag', etag);
+  }
   return new Response(response.body, { status: response.status, headers: out });
 }

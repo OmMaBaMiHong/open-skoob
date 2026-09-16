@@ -755,7 +755,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "6c04c8e60dd5f8fa5095c2a5a9d42da60632d670cf5d68b56b0cbde331d8592a"
+      "sha256": "27b3ded10977b7facf47699a588de76324a4343ac488da3e7b4bf4e1f0bc62ce"
     },
     {
       "path": "LICENSE",
@@ -775,7 +775,7 @@
     },
     {
       "path": "docs/api-integration.md",
-      "sha256": "ac2c660d1eaca87472fde95249c8d88e7c7f0cc3ca8370aa3cefafea6137a5d9"
+      "sha256": "fa0e493a236a2597cefd885573741002b8542fb07e0ec82b21306e947b15fcc6"
     },
     {
       "path": ".github/assets/wechat-pay.jpg",
@@ -815,7 +815,7 @@
     },
     {
       "path": "server/cloud.mjs",
-      "sha256": "a637670d37b72614e14a50e5f91968824ce753c92b7d7fd946675fd4cd030e62"
+      "sha256": "360f7a1400a7319e6df5723cd534ba55f803053c26378c33577618cb558ac529"
     },
     {
       "path": "server/general.mjs",
@@ -823,7 +823,7 @@
     },
     {
       "path": "server/models.mjs",
-      "sha256": "d1cad6134f0ed6b71ae24e983c92cd81a76d2ff77a4eeac795c137429261d076"
+      "sha256": "64d48b683fec1e5c5418542aafafd631d065359879cff20d9902a7a1b649ab6b"
     },
     {
       "path": "server/store.mjs",
@@ -835,7 +835,7 @@
     },
     {
       "path": "server/app.mjs",
-      "sha256": "0ff50880ebbc8dd77132579776e6c0b712084f543a19ad2d810b8a1342c4b5a9"
+      "sha256": "50226874d1eace1742b09cb2ef916545cfcd2cdfa33864083081c06642315f5a"
     },
     {
       "path": "server/creation.mjs",
@@ -895,7 +895,7 @@
     },
     {
       "path": "server/free-access.test.mjs",
-      "sha256": "e8831df4f974bcb58a403da72f15bde02c90cd690198f4c0112610a8c46682fa"
+      "sha256": "de97d8371a0dadb00cb18a68bdd894a3b40deedb2cf4f4afbf9ced472bfb6e8a"
     },
     {
       "path": "server/cloud-catalog.mjs",
@@ -904,6 +904,14 @@
     {
       "path": "src/cloud-access.tsx",
       "sha256": "71137b0c29771ed9645ae23b68cea2145fa31fe389e9d4ae9c0977b5367360e6"
+    },
+    {
+      "path": "server/cloud-cache.test.mjs",
+      "sha256": "2ad69f9c3691fb26c9e86f7612b9ed3ab86b976a85752f527b3f5cead80b9c61"
+    },
+    {
+      "path": "server/local-free.test.mjs",
+      "sha256": "157a325ab23bf7781d2a410b506a1cd29e9aa0f4e2161b90fdad7a37942af331"
     }
   ]
 }

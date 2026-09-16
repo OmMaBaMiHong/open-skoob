@@ -45,6 +45,11 @@ test('official models require a Key and live Free entitlement, never a built-in 
   let enabled = true; const calls = [];
   t.mock.method(globalThis, 'fetch', async (url, init) => {
     const path = String(url); const key = new Headers(init.headers).get('authorization'); calls.push({ path, key });
+    if (path.startsWith('https://api.kilo.ai/api/openrouter/')) {
+      assert.equal(key, null);
+      if (path.endsWith('/models')) return Response.json({ data: [{ id: 'allowed:free', pricing: { prompt: '0', completion: '0' } }] });
+      if (path.endsWith('/chat/completions')) return Response.json({ choices: [{ message: { content: 'ok' } }] });
+    }
     assert.equal(key, 'Bearer fixture-official-key');
     if (path.endsWith('/open/access?refresh=1')) return Response.json(grant);
     if (path.endsWith('/open/catalog/models')) return enabled ? Response.json({ data: [{ id: 'allowed:free', name: 'Allowed · Free' }] }) : Response.json({ error: { code: 'FREE_ENTITLEMENT_REQUIRED', message: '免费模型权益已关闭' } }, { status: 403 });

@@ -45,7 +45,7 @@ export function createApplication({ dataDir, origins = [], cloudEnv = process.en
   }
 
   const allowedOrigin = (origin, c) => origin === new URL(c.req.url).origin || origins.includes(origin);
-  app.use('*', async (c, next) => { c.header('X-Content-Type-Options', 'nosniff'); c.header('Referrer-Policy', 'no-referrer'); c.header('Cache-Control', 'no-store'); await next(); });
+  app.use('*', async (c, next) => { c.header('X-Content-Type-Options', 'nosniff'); c.header('Referrer-Policy', 'no-referrer'); await next(); if (!c.res.headers.has('Cache-Control')) c.header('Cache-Control', 'no-store'); });
   app.use('/api/*', bodyLimit({ maxSize: 90 * 1024 * 1024, onError: c => c.json({ error: { code: 'TOO_LARGE', message: '上传内容过大' } }, 413) }));
   app.use('/api/*', async (c, next) => {
     const url = new URL(c.req.url);

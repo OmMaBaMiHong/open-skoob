@@ -18,14 +18,27 @@ export function isOfficialService(store, service, input = {}) {
   const base = input.baseUrl || entry?.baseUrl || presets.find(e => e.service === service)?.baseUrl;
   return service === 'gaotk' || Boolean(base && ['lai.gaotk.com', 'gaotk.com'].includes(new URL(endpoint(base)).hostname));
 }
-async function officialModels(store, key, signal) {
+const LOCAL_FREE_BASE = 'https://api.kilo.ai/api/openrouter';
+const isFreeModel = id => id.endsWith(':free') || id === 'openrouter/free';
+async function officialModels(store, key, signal, selectedModel) {
   if (!key) throw new ApiError(403, 'FREE_KEY_REQUIRED', '请先领取并配置官方 Key，再使用 Free 套餐的模型权益。');
   const cloud = cloudOptions(store);
   const response = await fetch(endpoint(cloud.baseUrl) + '/api/v1/open/catalog/models', { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(20000)]), redirect: 'error' });
   const body = await response.json();
   if (!response.ok) throw new ApiError(response.status, body?.error?.code || 'FREE_VERIFY_FAILED', body?.error?.message || '官方模型权益校验失败，请重新验证 Key。');
   if (!Array.isArray(body.data)) throw new ApiError(502, 'MODEL_CATALOG_INVALID', '官方模型目录响应无效');
-  return body.data.filter(m => typeof m.id === 'string').map(m => ({ id: m.id, name: m.name || m.id }));
+  const allowed = body.data.filter(m => typeof m.id === 'string').map(m => ({ id: m.id, name: m.name || m.id }));
+  if (selectedModel && !isFreeModel(selectedModel) || !allowed.some(m => isFreeModel(m.id))) return allowed;
+  // Public anonymous upstream: the official Key and user prompts never enter this lookup.
+  const upstream = await fetch(`${LOCAL_FREE_BASE}/models`, { signal: AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(20000)]), redirect: 'error' });
+  if (!upstream.ok) throw new ApiError(503, 'LOCAL_FREE_UNAVAILABLE', '本机暂时无法连接免费模型目录，请检查网络后重试。未切换中转站。');
+  const catalog = await upstream.json();
+  if (!Array.isArray(catalog.data)) throw new ApiError(502, 'MODEL_CATALOG_INVALID', '免费模型目录响应无效');
+  const zero = value => (typeof value === 'number' || typeof value === 'string' && value.trim() !== '') && Number(value) === 0;
+  const free = new Map(catalog.data.filter(m => typeof m.id === 'string' && isFreeModel(m.id)
+    && m.pricing && zero(m.pricing.prompt) && zero(m.pricing.completion)
+    && Object.entries(m.pricing).every(([field, value]) => field === 'discount' || zero(value))).map(m => [m.id, m]));
+  return allowed.filter(m => !isFreeModel(m.id) || free.has(m.id)).map(m => free.has(m.id) ? { id: m.id, name: `${free.get(m.id).name || m.name} · Free · 本机直连` } : m);
 }
 export function endpoint(value) {
   let u; try { u = new URL(value); } catch { throw new ApiError(400, 'INVALID_BASE_URL', '请填写完整的模型服务 Base URL'); }
@@ -61,8 +74,12 @@ export async function listModels(store, service, input = {}, signal) {
 export async function complete(store, selected, messages, { signal, onDelta, purpose, json = false } = {}) {
   const m = resolveModel(store, selected, purpose);
   if (isOfficialService(store, m.service)) {
-    const allowed = await officialModels(store, m.key, signal);
+    const allowed = await officialModels(store, m.key, signal, m.model);
     if (!allowed.some(model => model.id === m.model)) throw new ApiError(403, 'MODEL_NOT_AUTHORIZED', '当前 Key 未授权所选模型，请刷新模型列表重新选择。');
+    if (isFreeModel(m.model)) {
+      // Node runs on the deployment machine. Never send the platform Key to Kilo.
+      m.baseUrl = LOCAL_FREE_BASE; m.key = ''; m.apiFormat = 'chat';
+    }
   }
   const responses = m.apiFormat === 'responses';
   const stream = m.stream !== false && Boolean(onDelta);
@@ -73,7 +90,10 @@ export async function complete(store, selected, messages, { signal, onDelta, pur
     method: 'POST', headers: { 'Content-Type': 'application/json', ...(m.key ? { Authorization: `Bearer ${m.key}` } : {}) },
     body: JSON.stringify(body), signal: AbortSignal.any([signal ?? new AbortController().signal, AbortSignal.timeout(300000)]), redirect: 'error',
   });
-  if (!response.ok) throw new ApiError(502, 'MODEL_REQUEST_FAILED', `所选模型请求失败（HTTP ${response.status}），未切换模型或中转站`);
+  if (!response.ok) {
+    if (m.baseUrl === LOCAL_FREE_BASE && response.status === 429) throw new ApiError(429, 'LOCAL_FREE_RATE_LIMITED', '本机出口 IP 的免费模型额度暂时受限，请稍后重试；未使用代理池或切换付费模型。');
+    throw new ApiError(502, 'MODEL_REQUEST_FAILED', `所选模型请求失败（HTTP ${response.status}），未切换模型或中转站`);
+  }
   let text = '';
   if (!stream || !response.headers.get('content-type')?.includes('text/event-stream')) {
     const result = await response.json();
