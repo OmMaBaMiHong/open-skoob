@@ -1,0 +1,54 @@
+/* 官网：单行能力墙与分层流程。仅作用于官网，不改变工作台组件。 */
+.nova-runtime .nova-section { padding-block: clamp(72px, 8vw, 112px); scroll-margin-top: 68px; }
+.nova-runtime .nova-capabilities { background: rgba(5,5,5,.9); }
+.nova-runtime .nova-section-title { line-height: 1.25; text-wrap: balance; letter-spacing: -.025em; }
+.nova-runtime .nova-section-header { margin-bottom: 44px; }
+.nova-runtime .nova-engine-desc { color: rgba(255,255,255,.66); line-height: 1.85; }
+.nova-runtime .nova-editorial-head { display: grid; grid-template-columns: 1.25fr 1fr; gap: 64px; align-items: end; margin-bottom: 48px; }
+.nova-runtime .nova-editorial-head .nova-section-title { font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif; font-weight: 500; font-size: clamp(32px, 3.8vw, 48px); letter-spacing: .015em; }
+.nova-runtime .nova-editorial-head > p { max-width: 440px; margin: 0 0 4px auto; font-size: 15px; line-height: 1.95; color: rgba(255,255,255,.63); }
+.nova-runtime .nova-rail { --rail-columns: 4; --rail-min: 260px; --rail-gap: 18px; min-width: 0; }
+.nova-runtime .nova-rail--steps { --rail-columns: 6; --rail-min: 184px; }
+.nova-runtime .nova-rail--masters { --rail-columns: 8; --rail-min: 156px; }
+.nova-runtime .nova-rail-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; margin-bottom: 18px; color: var(--nova-muted); font-size: 12px; letter-spacing: .04em; }
+.nova-runtime .nova-rail-toolbar > span > span { margin-inline: 12px; opacity: .5; }
+.nova-runtime .nova-rail-actions { display: flex; align-items: center; gap: 8px; }
+.nova-runtime .nova-rail-actions button { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; background: transparent; color: var(--nova-text); cursor: pointer; transition: background .2s, border-color .2s; }
+.nova-runtime .nova-rail-actions button:hover:not(:disabled) { background: rgba(255,255,255,.09); border-color: var(--nova-accent); }
+.nova-runtime .nova-rail-actions button:disabled { opacity: .25; cursor: default; }
+.nova-runtime .nova-rail-hint { margin-right: 8px; font-size: 11px; }
+.nova-runtime .nova-rail-track { display: grid; grid-auto-flow: column; grid-auto-columns: max(var(--rail-min), calc((100% - (var(--rail-columns) - 1) * var(--rail-gap)) / var(--rail-columns))); gap: var(--rail-gap); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.22) transparent; padding: 2px 0 18px; border-radius: 3px; }
+.nova-runtime .nova-rail-track > * { scroll-snap-align: start; min-width: 0; }
+.nova-runtime .nova-rail-track[data-overflow="true"] { cursor: grab; }
+.nova-runtime .nova-rail-track[data-dragging="true"] { cursor: grabbing; user-select: none; scroll-snap-type: none; }
+.nova-runtime .nova-capability-card { display: flex; flex-direction: column; padding: 26px 25px 28px; border: 1px solid rgba(255,255,255,.12); border-top: 2px solid var(--engine-color); border-radius: 6px 6px 18px 18px; background: rgba(10,10,12,.94); transition: border-color .2s, background .2s; }
+.nova-runtime .nova-capability-card:hover { background: rgba(20,20,22,.96); border-color: var(--engine-color); }
+.nova-runtime .nova-capability-top { display: flex; align-items: center; justify-content: space-between; color: var(--engine-color); margin-bottom: 42px; }
+.nova-runtime .nova-capability-top > span { font-size: 12px; font-variant-numeric: tabular-nums; opacity: .75; }
+.nova-runtime .nova-capability-role { font-size: 12px; color: var(--engine-color); margin-bottom: 12px; letter-spacing: .12em; }
+.nova-runtime .nova-capability-card h3 { font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif; font-weight: 500; font-size: 30px; letter-spacing: .045em; line-height: 1.3; }
+.nova-runtime .nova-capability-en { font-size: 10px; letter-spacing: .2em; color: var(--nova-muted-2); margin-top: 9px; }
+.nova-runtime .nova-capability-card > p { font-size: 13px; line-height: 1.9; color: rgba(255,255,255,.68); margin: 25px 0 28px; }
+.nova-runtime .nova-capability-card ul { display: grid; gap: 12px; padding: 20px 0 0; margin: auto 0 0; list-style: none; border-top: 1px solid var(--nova-border); }
+.nova-runtime .nova-capability-card li { display: flex; gap: 10px; align-items: center; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,.78); }
+.nova-runtime .nova-capability-card li svg { flex-shrink: 0; color: var(--engine-color); }
+.nova-runtime .nova-expert-grid { gap: 24px; }
+.nova-runtime .nova-expert-grid .nova-engine-card { padding: 28px; }
+.nova-runtime #pricing > .nova-section-inner > .nova-engine-desc { text-align: center; max-width: 680px; margin: -16px auto 36px; }
+@media (max-width: 900px) {
+  .nova-runtime .nova-editorial-head { grid-template-columns: 1fr; gap: 22px; margin-bottom: 28px; }
+  .nova-runtime .nova-editorial-head > p { margin: 0; max-width: 580px; }
+}
+@media (max-width: 640px) {
+  .nova-runtime .nova-section { padding-inline: 22px; }
+  .nova-runtime .nova-section-title { font-size: 30px; line-height: 1.35; }
+  .nova-runtime .nova-rail--engines { --rail-min: min(290px, 85vw); }
+  .nova-runtime .nova-capability-top { margin-bottom: 30px; }
+  .nova-runtime .nova-rail-toolbar { margin-bottom: 12px; }
+  .nova-runtime .nova-rail-hint { font-size: 10px; margin-right: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nova-runtime .nova-capability-card, .nova-runtime .nova-rail-actions button { transition: none; }
+}
+
+.nova-runtime .nova-rail-track:focus-visible, .nova-runtime .nova-rail-actions button:focus-visible { outline: 2px solid var(--nova-accent); outline-offset: 3px; }

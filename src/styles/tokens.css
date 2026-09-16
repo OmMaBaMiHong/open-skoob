@@ -1,0 +1,82 @@
+/* ════════════════════════════════════════════════════════════════════════
+   AB-v4 设计令牌 · 暖纸白(浅) / 暖炭黑(深) + 焚橙
+   ════════════════════════════════════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+  /* 背景 */
+  --bg: #FAF7F2;
+  --panel: #FFFFFF;
+  --panel2: #F3EEE6;
+  /* 文字 */
+  --text: #211B16;
+  --muted: rgba(33, 27, 22, 0.64);
+  --faint: rgba(33, 27, 22, 0.40);
+  /* 边框 */
+  --line: rgba(33, 27, 22, 0.10);
+  --line2: rgba(33, 27, 22, 0.06);
+  /* 品牌:焚橙 */
+  --accent: #E8590C;
+  --accent-deep: #C2410C;
+  --accent-soft: rgba(232, 89, 12, 0.08);
+  /* 语义色 */
+  --ok: #15803D;
+  --ok-soft: rgba(21, 128, 61, 0.08);
+  --warn: #B45309;
+  --warn-soft: rgba(180, 83, 9, 0.08);
+  --gold: #A16207;
+  /* 阴影 */
+  --shadow: 0 1px 3px rgba(33, 27, 22, 0.06), 0 8px 24px rgba(33, 27, 22, 0.05);
+  --shadow-lg: 0 4px 16px rgba(33, 27, 22, 0.08), 0 12px 36px rgba(33, 27, 22, 0.06);
+  --shadow-xl: 0 8px 32px rgba(33, 27, 22, 0.10), 0 24px 64px rgba(33, 27, 22, 0.08);
+}
+
+[data-theme="dark"] {
+  --bg: #131110;
+  --panel: #1B1917;
+  --panel2: #26221F;
+  --text: #F0EBE4;
+  --muted: rgba(240, 235, 228, 0.62);
+  --faint: rgba(240, 235, 228, 0.36);
+  --line: rgba(240, 235, 228, 0.09);
+  --line2: rgba(240, 235, 228, 0.05);
+  --accent: #F97316;
+  --accent-deep: #EA580C;
+  --accent-soft: rgba(249, 115, 22, 0.12);
+  --ok: #4ADE80;
+  --ok-soft: rgba(74, 222, 128, 0.09);
+  --warn: #FBBF24;
+  --warn-soft: rgba(251, 191, 36, 0.09);
+  --gold: #EAB308;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.35), 0 12px 36px rgba(0, 0, 0, 0.30);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.40), 0 24px 64px rgba(0, 0, 0, 0.35);
+}
+
+/* 字体 */
+:root {
+  --font-sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+/*
+ * 触控最小尺寸。
+ *
+ * ── 这个数为什么是写死的 ──
+ *
+ * 它不是布局尺寸，是**人手的物理常量**：成年人指尖接触面约 8–10mm，
+ * 换算过来就是 44px 左右。屏幕再大再小、横屏竖屏，手指都是那么粗。
+ * 布局要自适应，这个不用——按比例缩放反而会在小屏上把它缩到点不中。
+ *
+ * 用法是 `min-height`，不是 `height`：它是**下限**，内容多了照样长高。
+ * 而且只在 `pointer: coarse`（手指操作的设备）下生效——鼠标能点中 24px 的
+ * 东西，桌面上一律套 44px 会让界面变得又空又笨。
+ */
+:root {
+  --tap: 44px;
+  /* 密集列表里放宽一档：一屏要放下更多条目时，40 也还点得住。 */
+  --tap-dense: 40px;
+}

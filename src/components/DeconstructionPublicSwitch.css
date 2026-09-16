@@ -1,0 +1,9 @@
+.deconstruction-public-switch { font-size: 13px; color: var(--muted); }
+.dc-row-entry > .deconstruction-public-switch { padding: 10px 16px 14px; }
+.deconstruction-public-switch label { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.deconstruction-public-switch [role="switch"] { padding: 3px; width: 36px; height: 22px; border: 0; border-radius: 20px; background: var(--muted); cursor: pointer; flex: none; }
+.deconstruction-public-switch [role="switch"] span { display: block; width: 16px; height: 16px; border-radius: 50%; background: white; transition: transform .15s; }
+.deconstruction-public-switch [aria-checked="true"] { background: var(--accent); }
+.deconstruction-public-switch [aria-checked="true"] span { transform: translateX(14px); }
+.deconstruction-public-switch button:disabled { opacity: .5; cursor: default; }
+.deconstruction-public-switch [role="alert"] { display: block; color: var(--warn); margin-top: 5px; }

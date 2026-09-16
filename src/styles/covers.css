@@ -1,0 +1,65 @@
+.covers-page .page-top { align-items: flex-start; }
+.cover-subtitle { margin: 7px 0 0; color: var(--muted); font-size: 14px; }
+.cover-studio { display: grid; grid-template-columns: minmax(290px, 1fr) minmax(300px, 1fr); gap: 32px; max-width: 1100px; margin: 0 auto; padding-bottom: 32px; }
+.cover-story, .cover-results { min-width: 0; }
+.cover-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.cover-section-head h2 { font-size: 18px; margin: 0; }
+.cover-section-head a { color: var(--accent); font-size: 13px; }
+.cover-studio label { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; font-size: 13px; font-weight: 600; }
+.cover-studio input:not([type="file"]), .cover-studio select, .cover-studio textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); padding: 10px 12px; font: inherit; font-weight: 400; }
+.cover-studio textarea { resize: vertical; min-height: 60px; }
+.cover-studio input[type="color"] { height: 42px; padding: 4px; }
+.cover-studio button:disabled { opacity: .55; cursor: not-allowed; }
+.cover-studio :is(button, a, input, select, textarea, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cover-fields { border: 0; padding: 0; margin: 16px 0; min-width: 0; }
+.cover-help { font-size: 12px; color: var(--muted); line-height: 1.6; margin: 8px 0 14px; }
+.cover-style-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; max-height: 300px; overflow: auto; }
+.cover-style { text-align: left; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; }
+.cover-style img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 4px; margin-bottom: 6px; }
+.cover-style strong, .cover-style span { display: block; font-size: 12px; }
+.cover-style span { color: var(--muted); font-size: 10px; line-height: 1.5; margin-top: 5px; }
+.cover-style.is-selected, .cover-history-list button.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.cover-typography { border-top: 1px solid var(--line); padding-top: 14px; }
+.cover-typography summary { font-size: 13px; cursor: pointer; margin-bottom: 14px; }
+.cover-service { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; line-height: 1.6; }
+.cover-service a { color: var(--accent); margin-left: 6px; }
+.cover-text-button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 4px 0; color: var(--accent); cursor: pointer; font: inherit; font-size: 12px; }
+.cover-generate { width: 100%; justify-content: center; margin-top: 16px; min-height: 44px; }
+.cover-preview { width: min(100%, 330px); aspect-ratio: 3/4; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 0 auto; }
+.cover-preview.is-thumbnail { width: 96px; }
+.cover-preview img { width: 100%; height: 100%; object-fit: contain; }
+.cover-placeholder { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; box-sizing: border-box; color: var(--muted); text-align: center; }
+.cover-placeholder strong { font-size: 16px; color: var(--text); }
+.cover-placeholder span { font-size: 12px; line-height: 1.6; }
+.cover-preview.is-thumbnail .cover-placeholder :is(span, strong) { display: none; }
+.cover-result-info { text-align: center; font-size: 12px; margin-top: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.cover-result-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.cover-result-actions > :is(p, label) { width: 100%; margin: 0; }
+.cover-result-actions a { text-decoration: none; }
+.cover-history, .cover-current { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 18px; }
+.cover-studio h3 { font-size: 14px; margin: 0 0 14px; }
+.cover-history-list { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 10px; }
+.cover-history-list button { width: 88px; flex: 0 0 88px; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 6px; padding: 4px; cursor: pointer; text-align: left; }
+.cover-history-list img, .cover-history-empty { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 3px; background: var(--panel2); }
+.cover-history-empty { display: flex; align-items: center; justify-content: center; }
+.cover-history-list span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; margin: 6px 0 3px; }
+.cover-history-list small { font-size: 10px; color: var(--muted); }
+.cover-current > img { width: 90px; aspect-ratio: 3/4; object-fit: contain; border-radius: 5px; margin-bottom: 12px; }
+.cover-current-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cover-warning { border-left: 3px solid #c58a22; padding: 8px 12px; font-size: 12px; line-height: 1.6; }
+.cover-notice { color: #15803d; font-size: 13px; }
+.app-cover-mobile { display: none; }
+.lib-cover-link { display: block; flex-shrink: 0; position: relative; text-decoration: none; }
+.lib-cover-link .lib-thumb { display: block; }
+.lib-cover-link em { position: absolute; inset: auto 0 0; font-size: 9px; color: #fff; background: #0008; font-style: normal; text-align: center; padding: 3px 0; }
+.lib-row a.lib-row-body { text-decoration: none; color: inherit; }
+.lib-cover-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.lib-cover-actions a { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); text-decoration: none; font-size: 12px; min-height: 36px; }
+@media (max-width: 768px) {
+  .cover-studio { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .cover-results { border-top: 1px solid var(--line); padding-top: 24px; }
+  .app-cover-mobile { display: inline-flex; align-items: center; padding: 8px; border-radius: 6px; color: var(--text); text-decoration: none; font-size: 13px; }
+  .app-cover-mobile.is-active { color: var(--accent); background: var(--panel2); }
+  .lib-cover-actions { flex-direction: column; gap: 0; align-items: flex-end; }
+  .lib-cover-actions a { font-size: 11px; min-height: 32px; }
+}

@@ -1,0 +1,21 @@
+.cp, .ga-composer { position: relative; }
+.composer-selector { position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; z-index: 40; border: 1px solid var(--border, #ddd); border-radius: 12px; background: var(--card, #fff); color: var(--ink, #29251e); box-shadow: 0 8px 30px #0002; overflow: hidden; font-size: 13px; }
+.composer-selector-tabs { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 8px; border-bottom: 1px solid var(--border, #ddd); }
+.composer-selector-tabs button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; color: inherit; padding: 7px 9px; border-radius: 6px; cursor: pointer; font: inherit; }
+.composer-selector-tabs button[aria-selected="true"] { background: var(--surface, #f1efe9); font-weight: 600; }
+.composer-selector-tabs button:last-child { margin-left: auto; }
+.composer-selector-search { display: flex; align-items: center; gap: 8px; padding: 10px 12px; }
+.composer-selector-search input { min-width: 0; flex: 1; color: inherit; background: transparent; border: 0; font: inherit; }
+.composer-selector-scope { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; font-size: 12px; border-bottom: 1px solid var(--border, #ddd); }
+.composer-selector-scope label { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.composer-selector-list { max-height: min(300px, 40vh); overflow-y: auto; padding: 5px; }
+.composer-selector-list p { margin: 12px; }
+.composer-selector-option { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; border: 0; border-radius: 6px; padding: 10px; color: inherit; background: transparent; cursor: pointer; font: inherit; overflow-wrap: anywhere; }
+.composer-selector-option[aria-selected="true"] { background: var(--surface, #f1efe9); }
+.composer-selector-option > span { display: flex; align-items: center; gap: 5px; font-weight: 500; }
+.composer-selector-option small { color: var(--muted, #777); line-height: 1.5; }
+.composer-selector button:focus-visible, .composer-selector input:focus-visible { outline: 2px solid var(--accent, #786348); outline-offset: -2px; }
+.composer-selection-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.composer-selection-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; border: 1px solid var(--border, #ddd); border-radius: 8px; padding: 5px 8px; font-size: 12px; overflow-wrap: anywhere; }
+.composer-selection-chip small { color: var(--muted, #777); }
+.composer-selection-chip button { display: inline-flex; border: 0; background: transparent; color: inherit; cursor: pointer; padding: 2px; }

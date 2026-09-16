@@ -1,0 +1,36 @@
+.tadm, .platform-settings { display: grid; gap: 26px; width: 100%; color: var(--text); }
+.tadm-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.tadm-heading h1, .tadm-heading h2 { font: 600 30px/1.3 var(--font-serif); margin: 0 0 12px; letter-spacing: -.02em; }
+.tadm-heading p { color: var(--muted); margin: 0; max-width: 660px; font-size: 13px; line-height: 1.8; }
+.tadm-kicker { display: block; color: var(--accent-deep); font-size: 11px; letter-spacing: .12em; margin-bottom: 12px; }
+.tadm-tabs { display: flex; gap: 26px; border-bottom: 1px solid var(--line); }
+.tadm-tab { padding: 0 0 14px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: inherit; cursor: pointer; }
+.tadm-tab.is-on { border-bottom-color: var(--accent-deep); color: var(--accent-deep); font-weight: 600; }
+.tadm-panel { display: grid; gap: 18px; min-width: 0; }
+.tadm-group { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(0, 2fr); gap: 36px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 28px; }
+.tadm-group-heading h3 { margin: 0 0 8px; font-size: 15px; }.tadm-group-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.tadm-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-content: start; }
+.tadm-fields.is-stacked { grid-template-columns: minmax(0, 1fr); }
+.tadm-field { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.tadm-field-label { font-weight: 500; font-size: 13px; }
+.tadm-field-hint { color: var(--muted); font-size: 11px; line-height: 1.65; }
+.tadm-field input:not([type="checkbox"]), .tadm-field select, .tadm-field textarea { box-sizing: border-box; width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); padding: 10px 12px; font: inherit; font-size: 13px; line-height: 1.65; outline: none; }
+.tadm-field textarea { resize: vertical; min-height: 90px; }
+.tadm-field input:focus, .tadm-field select:focus, .tadm-field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.tadm-field input[type="checkbox"], .tadm-check input, .membership-options input { accent-color: var(--accent-deep); width: 16px; height: 16px; flex-shrink: 0; }
+.tadm-save, .tadm-add, .tadm-edit, .tadm-del, .tadm-secondary { display: inline-flex; justify-content: center; align-items: center; gap: 7px; justify-self: start; min-height: 38px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; font: inherit; font-size: 12px; background: var(--panel); color: var(--text); cursor: pointer; text-decoration: none; }
+.tadm-save { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }.tadm-save:hover:not(:disabled) { filter: brightness(1.08); }.tadm-add:hover, .tadm-edit:hover, .tadm-secondary:hover { border-color: var(--accent); color: var(--accent-deep); }
+.tadm-del { color: var(--muted); }.tadm-del:hover { color: #b42318; border-color: #b42318; }.tadm button:disabled, .platform-settings button:disabled { opacity: .5; cursor: not-allowed; }
+.tadm-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 8px 0; }.tadm-footer small { color: var(--muted); }
+.tadm-item { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }.tadm-item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 18px 20px; }.tadm-item-head h3 { margin: 0; font-size: 15px; }.tadm-item-head code { color: var(--muted); font-size: 11px; }.tadm-item-head .tadm-edit { margin-left: auto; }
+.tadm-item-body { padding: 0 20px 20px; color: var(--muted); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+.tadm-badge { display: inline-flex; padding: 3px 9px; border-radius: 5px; background: var(--panel2); color: var(--muted); font-size: 11px; white-space: nowrap; }.tadm-badge.is-on { color: var(--ok); background: var(--ok-soft); }
+.tadm-editor { display: grid; gap: 18px; padding: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }.tadm-editor-actions { display: flex; gap: 10px; }.tadm-check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.tadm-notice, .tadm-error { padding: 12px 16px; border-radius: 8px; line-height: 1.7; font-size: 13px; }.tadm-notice { color: var(--ok); background: var(--ok-soft); }.tadm-error { color: #b42318; background: #b4231810; }.tadm-loading { display: flex; align-items: center; gap: 8px; color: var(--muted); padding: 30px 0; }
+.membership-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }.membership-options label { display: flex; align-items: center; gap: 8px; font-size: 13px; }.membership-card { border: 1px solid var(--line); border-radius: 14px; padding: 24px; background: var(--panel); display: grid; gap: 24px; min-width: 0; }.membership-card legend { padding: 0 8px; font-weight: 600; }
+.personal-agent { max-width: 1000px; margin: 0 auto; }.personal-agent-preview { display: flex; align-items: center; gap: 15px; padding: 22px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 12px 12px 0; }.personal-agent-preview h3 { margin: 0 0 4px; }.personal-agent-preview p { color: var(--muted); margin: 0; line-height: 1.7; font-size: 13px; }.personal-agent-initial { display: grid; place-items: center; flex: 0 0 48px; height: 48px; border-radius: 50%; background: var(--panel); color: var(--accent-deep); font: 24px var(--font-serif); }
+.persona-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }.persona-card { display: flex; gap: 14px; padding: 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }.persona-card h3 { margin: 0 0 5px; font-size: 16px; }.persona-card p { color: var(--muted); font-size: 12px; line-height: 1.75; }.persona-card .tadm-badge { margin-right: 8px; }.persona-avatar { flex: 0 0 52px; height: 52px; width: 52px; border-radius: 14px; object-fit: cover; display: inline-grid; place-items: center; background: var(--accent-soft); color: var(--accent-deep); font: 24px var(--font-serif); }
+.spin { animation: settings-spin 1s linear infinite; }@keyframes settings-spin { to { transform: rotate(360deg); } }
+@media (max-width: 760px) { .tadm-group { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 22px; }.tadm-heading { flex-wrap: wrap; }.tadm-heading h1, .tadm-heading h2 { font-size: 26px; }.persona-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 420px) { .tadm-fields, .membership-options { grid-template-columns: minmax(0, 1fr); }.tadm-tabs { gap: 20px; }.tadm-group, .tadm-editor, .membership-card { padding: 18px; } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }

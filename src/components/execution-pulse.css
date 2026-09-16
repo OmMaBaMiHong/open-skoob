@@ -1,0 +1,4 @@
+.execution-pulse{display:flex;align-items:center;gap:8px;min-width:0;padding:10px 14px;border-bottom:1px solid var(--border,#e5e7eb);font-size:12px;line-height:1.5;color:var(--text,#333)}
+.execution-pulse>svg,.execution-pulse>small{flex-shrink:0}.execution-pulse>small{color:var(--muted,#888);font-variant-numeric:tabular-nums}.execution-pulse-text{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;animation:execution-line-in .25s ease-out}.execution-pulse.is-running>svg{color:var(--accent,#ed5a09)}
+@keyframes execution-line-in{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.execution-pulse-text,.execution-pulse .spin{animation:none}}

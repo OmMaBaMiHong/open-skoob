@@ -1,0 +1,26 @@
+.skoob-brand-mark {
+  display: inline-block;
+  flex: 0 0 auto;
+  object-fit: contain;
+  border-radius: 0;
+  vertical-align: middle;
+}
+
+.skoob-brand-mark.app-brand-logo,
+.skoob-brand-mark.nova-logo-img,
+.skoob-brand-mark.rl-brand-logo {
+  object-fit: contain;
+  border-radius: 0;
+}
+
+.skoob-brand-mark.ga-brand-mascot {
+  display: block;
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 16px;
+}
+
+.skoob-brand-mark.admin-brand-mark {
+  width: 40px;
+  height: 40px;
+}

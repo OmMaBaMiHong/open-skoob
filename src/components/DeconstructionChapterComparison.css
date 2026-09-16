@@ -1,0 +1,23 @@
+.chapter-comparison { container-type: inline-size; }
+.chapter-comparison-toggle { display: flex; align-items: center; gap: 6px; margin: 4px 16px 12px; padding: 7px 10px; border: 1px solid var(--border, #e5e1da); border-radius: 8px; background: transparent; color: var(--accent, #ed5b16); cursor: pointer; font: inherit; font-size: 13px; }
+.chapter-comparison-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-top: 1px solid var(--border, #e5e1da); }
+.chapter-comparison-columns section { min-width: 0; padding: 18px; max-height: 68vh; overflow: auto; overscroll-behavior: contain; }
+.chapter-comparison-analysis { border-left: 1px solid var(--border, #e5e1da); }
+.chapter-comparison h3 { margin: 0 0 16px; font-size: 15px; }
+.chapter-comparison h3 small { display: block; margin-top: 6px; font-weight: normal; font-size: 12px; opacity: .6; }
+.chapter-original-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 2; }
+.chapter-comparison-columns .dcw-fields { padding: 0; }
+.chapter-comparison-columns .dcw-field { display: block; }
+.chapter-comparison-columns .dcw-field-label { display: block; margin-bottom: 5px; }
+.chapter-comparison-columns .dcw-field-value { white-space: pre-wrap; overflow-wrap: anywhere; }
+.chapter-comparison [role="alert"] button { display: block; margin-top: 12px; }
+.chapter-comparison-tabs { display: none; }
+@container (max-width: 650px) {
+  .chapter-comparison-tabs { display: flex; padding: 0 16px 12px; gap: 8px; }
+  .chapter-comparison-tabs button { flex: 1; padding: 9px; border: 1px solid var(--border, #e5e1da); background: transparent; border-radius: 8px; color: inherit; cursor: pointer; }
+  .chapter-comparison-tabs [aria-selected="true"] { border-color: var(--accent, #ed5b16); color: var(--accent, #ed5b16); }
+  .chapter-comparison-columns { grid-template-columns: minmax(0, 1fr); }
+  .chapter-comparison-analysis { border-left: 0; }
+  .chapter-comparison-columns[data-tab="original"] .chapter-comparison-analysis,
+  .chapter-comparison-columns[data-tab="analysis"] .chapter-comparison-original { display: none; }
+}

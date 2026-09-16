@@ -1,0 +1,66 @@
+.dcw-layout-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 12px; border-bottom: 1px solid var(--line); flex: none; }
+.dcw-layout-toolbar button { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
+.dcw-layout-toolbar button:hover, .dcw-layout-toolbar button:focus-visible { background: var(--panel2); color: var(--accent); }
+.dcw-layout-toolbar .dcw-mobile-tabs { display: none; }
+.dcw .dcw-body.dcw-resizable:has(.dcw-chat) { grid-template-columns: var(--dcw-left) 6px minmax(320px, 1fr) 6px var(--dcw-right); grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+.dcw-resizable > .dcw-side { grid-column: 1; grid-row: 1; min-width: 0; border-right: 0; }
+.dcw-resizable > .dcw-stage { grid-column: 3; grid-row: 1; }
+.dcw-resizable > .dcw-stage[hidden] { display: none; }
+.dcw-resizable > .dcw-chat { grid-column: 5; grid-row: 1; border-left: 0; }
+.dcw-divider { grid-row: 1; cursor: col-resize; touch-action: none; background: var(--line); position: relative; outline-offset: -2px; }
+.dcw-divider::after { content: ""; position: absolute; inset: 0 -3px; z-index: 2; }
+.dcw-divider.is-left { grid-column: 2; }
+.dcw-divider.is-right { grid-column: 4; }
+.dcw-divider:hover, .dcw-divider:focus-visible, .dcw-resizable.is-resizing > .dcw-divider { background: var(--accent); }
+.dcw-resizable.is-resizing { user-select: none; cursor: col-resize; }
+.dcw-resizable.is-resizing iframe { pointer-events: none; }
+.dcw-resizable.is-left-collapsed > .dcw-side, .dcw-resizable.is-right-collapsed > .dcw-chat { display: none; }
+.dcw-chat-resource { display: flex; flex-direction: column; gap: 5px; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); padding: 10px; margin: 8px 0; cursor: pointer; overflow-wrap: anywhere; }
+.dcw-chat-resource:hover, .dcw-chat-resource:focus-visible { border-color: var(--accent); }
+.dcw-chat-resource small, .dcw-chat-files summary { color: var(--muted); font-size: 11px; }
+.dcw-chat-files { margin: 12px 0; }
+.dcw-chat-files summary { cursor: pointer; }
+.dcw-resource-view { min-width: 0; }
+.dcw-resource-view > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.dcw-resource-view h2 { margin: 0 0 8px; font-size: 20px; overflow-wrap: anywhere; }
+.dcw-resource-view header span { color: var(--muted); font-size: 12px; }
+.dcw-resource-view button, .dcw-resource-actions a { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); padding: 7px 10px; font-size: 12px; cursor: pointer; }
+.dcw-resource-view button:disabled { opacity: .4; cursor: default; }
+.dcw-resource-view > header > button { flex-shrink: 0; }
+.dcw-resource-actions, .dcw-resource-pages { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.dcw-resource-pages { font-size: 12px; color: var(--muted); }
+.dcw-resource-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.85; font-size: 14px; }
+.dcw-resource-image { display: block; max-width: 100%; height: auto; }
+.dcw-resource-pdf, .dcw-resource-view iframe { width: 100%; min-height: 60dvh; border: 1px solid var(--line); border-radius: 8px; background: white; }
+/* 写书与拆书共用分栏交互，保留原有内容组件和各自布局偏好。 */
+.wb > .wb-body.dcw-resizable { grid-template-columns: var(--dcw-left) 6px minmax(320px, 1fr) 6px var(--dcw-right); grid-template-rows: minmax(0, 1fr); gap: 0; padding: 12px; overflow: hidden; }
+.wb-body.dcw-resizable > .cast { grid-column: 1; grid-row: 1; min-width: 0; display: flex; }
+.wb-body.dcw-resizable > .wb-stage { grid-column: 3; grid-row: 1; min-width: 0; margin: 0 8px; }
+.wb-body.dcw-resizable > .cop { grid-column: 5; grid-row: 1; min-width: 0; display: flex; }
+.wb-body.dcw-resizable.is-left-collapsed > .cast, .wb-body.dcw-resizable.is-right-collapsed > .cop { display: none; }
+.cop-task-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.cop-task-actions:has(> *) { margin-bottom: 8px; }
+.cop-task-actions .cop-review { width: 100%; margin: 0; }
+@media (max-width: 850px) {
+  .wb > .wb-body.dcw-resizable { grid-template-columns: minmax(0, 1fr); padding: 8px; }
+  .wb-body.dcw-resizable > .cast, .wb-body.dcw-resizable > .wb-stage, .wb-body.dcw-resizable > .cop { grid-column: 1; grid-row: 1; margin: 0; }
+  .wb-body.dcw-resizable:not(.is-mobile-directory) > .cast, .wb-body.dcw-resizable:not(.is-mobile-reading) > .wb-stage, .wb-body.dcw-resizable:not(.is-mobile-chat) > .cop { display: none; }
+  .wb-body.dcw-resizable.is-mobile-directory > .cast, .wb-body.dcw-resizable.is-mobile-chat > .cop { display: flex; }
+  .dcw:has(.dcw-resizable .dcw-chat) { height: calc(100dvh - var(--app-header-h, 57px) - var(--app-tabbar-h, 0px)); }
+  .dcw:has(.dcw-chat) .dcw-hint { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; }
+  .dcw:has(.dcw-chat) .dcw-hint-text { grid-column: 1 / -1; display: block; max-height: 64px; overflow-y: auto; }
+  .dcw:has(.dcw-chat) .dcw-askbox { min-width: 0; width: auto; }
+  .dcw-layout-toolbar { justify-content: center; }
+  .dcw-layout-toolbar .dcw-desktop-toggle { display: none; }
+  .dcw-layout-toolbar .dcw-mobile-tabs { display: flex; width: 100%; }
+  .dcw-mobile-tabs button { flex: 1; justify-content: center; min-height: 32px; }
+  .dcw-mobile-tabs button[aria-selected="true"] { color: var(--accent); background: var(--panel2); }
+  .dcw .dcw-body.dcw-resizable:has(.dcw-chat) { grid-template-columns: minmax(0, 1fr); }
+  .dcw-resizable > .dcw-divider { display: none; }
+  .dcw-resizable > .dcw-side, .dcw-resizable > .dcw-stage, .dcw-resizable > .dcw-chat { grid-column: 1; grid-row: 1; }
+  .dcw-resizable:not(.is-mobile-directory) > .dcw-side, .dcw-resizable:not(.is-mobile-reading) > .dcw-stage, .dcw-resizable:not(.is-mobile-chat) > .dcw-chat { display: none; }
+  .dcw-resizable.is-mobile-directory > .dcw-side { display: block; }
+  .dcw-resizable.is-mobile-chat > .dcw-chat { display: flex; min-height: 0; border: 0; }
+  .dcw-resizable .dcw-chat-messages { min-height: 0; max-height: none; }
+  .dcw-resource-view > header { flex-wrap: wrap; }
+}
