@@ -16,7 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Menu, X, ChevronDown, ArrowLeft, ArrowRight, ArrowUpRight, ChevronRight,
   Sun, Moon, BookOpen, Compass, FileCode2, Orbit, TrendingUp, Wrench,
-  Check, Lock,
+  Check, Lock, Github,
 } from "lucide-react";
 import { useTheme } from "../hooks/use-theme";
 import { useI18n } from "../i18n";
@@ -371,6 +371,9 @@ const DOC_CARDS = [
   { title: "开发者平台", meta: "ENGINE API · PRICING · INTEGRATION", desc: "引擎 API 能力 · 计费口径 · 接入指南", href: "/site/docs/api", Icon: FileCode2 },
 ] as const;
 
+/** 开源仓库：顶部导航与页脚指向的 GitHub 地址。 */
+const GITHUB_REPO_URL = "https://github.com/OmMaBaMiHong/open-skoob";
+
 /** 官网与购买页共用套餐数据，避免价格和权益说明漂移。 */
 const LANDING_PLANS: ReadonlyArray<PlanInfo & {
   href: string; ctaLabel?: string; badge?: string; excluded?: ReadonlyArray<string>;
@@ -622,6 +625,10 @@ export function Footer() {
             <Link to="/site/docs/user-guide">用户指南</Link>
             <Link to="/site/docs/api">开发者平台</Link>
           </div>
+          <div>
+            <h4>开源</h4>
+            <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer noopener">GitHub 仓库 <Github size={12} className="inline" /></a>
+          </div>
         </div>
       </div>
       <div className="nova-footer-bottom">
@@ -734,6 +741,16 @@ export function SiteHomePage() {
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+            <a
+              className="nova-icon-btn"
+              href={GITHUB_REPO_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label="GitHub 开源仓库"
+              title="GitHub 开源仓库"
+            >
+              <Github size={16} />
+            </a>
             <button type="button" className="nova-primary-btn" onClick={onOpenApp}>
               开始创作
             </button>
@@ -755,6 +772,9 @@ export function SiteHomePage() {
             <a href="#pipeline" className="nova-mobile-link" onClick={anchor("pipeline")}>创作工作台</a>
             <a href="#pricing" className="nova-mobile-link" onClick={anchor("pricing")}>定价</a>
             <Link to="/site/docs" className="nova-mobile-link">文档中心</Link>
+            <a href={GITHUB_REPO_URL} className="nova-mobile-link" target="_blank" rel="noreferrer noopener">
+              GitHub 开源仓库 <Github size={14} className="inline" />
+            </a>
             <button type="button" className="nova-primary-btn w-full mt-4" onClick={onOpenApp}>
               开始创作
             </button>

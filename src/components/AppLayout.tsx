@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, User, Crown, LogOut, Sun, Moon, ArrowLeft, Globe, Check,
-  PenLine, Library, BookOpen, Users, UserRound } from "lucide-react";
+  PenLine, Library, BookOpen, Users, UserRound , Github } from "lucide-react";
 import "../styles/covers.css";
 import { useTheme } from "../hooks/use-theme";
 import { SkoobLogo } from "../components/SkoobLogo";
@@ -315,6 +315,16 @@ function Header() {
           >
             {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
           </button>
+          <a
+            className="app-theme-toggle"
+            href="https://github.com/OmMaBaMiHong/open-skoob"
+            target="_blank"
+            rel="noreferrer noopener"
+            aria-label="GitHub 开源仓库"
+            title="GitHub 开源仓库"
+          >
+            <Github size={15} />
+          </a>
           <LanguageSwitcher />
           <div className="app-account-desktop">
             <AccountDropdown />
