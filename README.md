@@ -168,3 +168,9 @@ QQ 群：**1107955676**（焚决 skoob · 小说 Agent 创作群）
 官方模型统一使用「OpenSkoob 中转站」入口。先领取并验证自己的 Key，再加载该 Key 获授权的模型；项目不内置公共 Key 或免费模型目录。Free 套餐的 `models.use` 控制官方目录接入，模型调用前再次核验权益和模型权限。标注「Free · 本机直连」的模型，还须通过上游实时零价格目录核验，由本地后端直接请求 Kilo，不经过我们的代理池或中转站推理，不发送官方 Key；免费额度和限流由上游按出口 IP 决定。部署在自己电脑上使用本机出口，部署在 VPS 上则使用 VPS 出口。付费模型仍按中转站计费。自带服务商和本地模型不依赖官方 Free 权益。
 
 旧版自动创建的「Skoob 官方 / OpenSkoob Free」配置会在凭据相同时合并到官方入口，保留原模型选择与加密恢复记录；不同 Key 不会被静默覆盖。
+
+### 桌面客户端构建
+
+使用 Tauri 2 封装同一套公开前后端，支持 Windows x64、macOS Apple Silicon / Intel。运行时随安装包提供，使用者不需要安装 Node 或 Docker；首次启动可填写官方 Key，或选择自己的模型。作品和配置保存在系统应用数据目录，升级安装包不会覆盖本地作品。
+
+开发者安装 [Tauri 构建环境](https://v2.tauri.app/start/prerequisites/) 后运行 `npm ci`、`npm run desktop:build`。CI 的 Desktop packages 工作流分别构建三个平台，安装包通过 GitHub Releases 分发。首批为测试版；未配置开发者签名和 Apple 公证时，应按发布说明识别系统安装提示。

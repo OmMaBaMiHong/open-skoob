@@ -747,15 +747,15 @@
     },
     {
       "path": "package.json",
-      "sha256": "985a92d98cf748d01fad550afc76edd5422bb0494f5b5720b0c199e501b8d9dd"
+      "sha256": "4f7ac384c56ee280b37da8d595c5ab4d55984bb1ec0afff208d6e23d65304f77"
     },
     {
       "path": "package-lock.json",
-      "sha256": "a9a6373863f34830595b669af89c337f5b13d7648cce8222f3b9c69656dfddc1"
+      "sha256": "42ce852cba091823ce88d7baae879bbf71cf31de9300264d54cf008c7d8d098e"
     },
     {
       "path": "README.md",
-      "sha256": "27b3ded10977b7facf47699a588de76324a4343ac488da3e7b4bf4e1f0bc62ce"
+      "sha256": "b734ee54ba333e849eae6a3f5764fde8d4086287ea00b4e99cbe2ae929d911d8"
     },
     {
       "path": "LICENSE",
@@ -763,7 +763,7 @@
     },
     {
       "path": ".gitignore",
-      "sha256": "a2cc0736654002ba37d36fe36cc6f229ecf349c992815200db582b7955498adf"
+      "sha256": "d2e2174d74f44b50a9b1e18ff4bbf37aff7d6b0ce2f8f3db13c08237b428e613"
     },
     {
       "path": ".env.example",
@@ -912,6 +912,66 @@
     {
       "path": "server/local-free.test.mjs",
       "sha256": "157a325ab23bf7781d2a410b506a1cd29e9aa0f4e2161b90fdad7a37942af331"
+    },
+    {
+      "path": "server/desktop.mjs",
+      "sha256": "9dfbe6a39477a93c5934da0d1c4ee7f32632098f0b7d229e7a5970751b77b5a0"
+    },
+    {
+      "path": "server/desktop.test.mjs",
+      "sha256": "3a0515db8462c402205e82f7dea45828e0cfcb58c03a6a383e122d3ad2515a47"
+    },
+    {
+      "path": "scripts/prepare-desktop.mjs",
+      "sha256": "18d517e57848a326d07d7a6cf99c596fab45c18ddfd66c0fc9325adae9484ce9"
+    },
+    {
+      "path": ".github/workflows/desktop.yml",
+      "sha256": "58e452c104eaa81c2bc5095230ea6a0b87238f90d478d093d70ccd67ce6ce1b1"
+    },
+    {
+      "path": "src-tauri/Cargo.toml",
+      "sha256": "6e3d9fd6d1e8ff09b5520824b894f2721a5ad819d64d55f890edcc92b338de2e"
+    },
+    {
+      "path": "src-tauri/tauri.conf.json",
+      "sha256": "d4f0890b78512475faddcf9425b94eca44ce1fac5e384a9f9f79b81bdf89ab7f"
+    },
+    {
+      "path": "src-tauri/Cargo.lock",
+      "sha256": "401898e4dfb8c0d57673a82c68bed1f0f884f461f01b30232712e605929a81ac"
+    },
+    {
+      "path": "src-tauri/build.rs",
+      "sha256": "8af41c0062014fc594e4bb9899e60ee9930ab57d4cf0c73041ff557d6ec736e6"
+    },
+    {
+      "path": "src-tauri/bootstrap/index.html",
+      "sha256": "83794b5d129a23f2ef4feacb23a4f7174a42f26d9c1aaf399c107b73bca7fc1c"
+    },
+    {
+      "path": "src-tauri/icons/icon.icns",
+      "sha256": "a64324b03039f0f20913e3d7b645d42b0e816fd6883d57d81dc89945fff6c596"
+    },
+    {
+      "path": "src-tauri/icons/icon.ico",
+      "sha256": "2029ca387256a0b8e805b33f7c056c7312ada87f3cbbaa69b9459a29115d1341"
+    },
+    {
+      "path": "src-tauri/icons/128x128.png",
+      "sha256": "a347ab300509eb7d9c40555ba83691fed5b73d3e1ff0aa009421d1a20d0c782a"
+    },
+    {
+      "path": "src-tauri/icons/32x32.png",
+      "sha256": "b63ac7c31b4310cc48263ae926f28de851c6c315cac20cd51d812f51161bf740"
+    },
+    {
+      "path": "src-tauri/icons/128x128@2x.png",
+      "sha256": "2077bbf6602bfbdd964aad643441d25d3e6cd7ccd61ff3002adb574a66d244d3"
+    },
+    {
+      "path": "src-tauri/src/main.rs",
+      "sha256": "32856bd9dcd6548177a8c234a360a2c65e0e149382d18c1bddd99fac5b0c5b98"
     }
   ]
 }
