@@ -927,7 +927,7 @@
     },
     {
       "path": ".github/workflows/desktop.yml",
-      "sha256": "58e452c104eaa81c2bc5095230ea6a0b87238f90d478d093d70ccd67ce6ce1b1"
+      "sha256": "40cc4c617b208a8fcf8555a0da48517ddc1fc6640a79720edfe4a055425bf5c8"
     },
     {
       "path": "src-tauri/Cargo.toml",
@@ -935,7 +935,7 @@
     },
     {
       "path": "src-tauri/tauri.conf.json",
-      "sha256": "d4f0890b78512475faddcf9425b94eca44ce1fac5e384a9f9f79b81bdf89ab7f"
+      "sha256": "61fe81e1661021873339adc8fac39f6d856425cda9878e0f72b16d3e008ae3a4"
     },
     {
       "path": "src-tauri/Cargo.lock",
@@ -972,6 +972,14 @@
     {
       "path": "src-tauri/src/main.rs",
       "sha256": "32856bd9dcd6548177a8c234a360a2c65e0e149382d18c1bddd99fac5b0c5b98"
+    },
+    {
+      "path": "src-tauri/Entitlements.plist",
+      "sha256": "85d97186afc33c073b2c524f88c5f8031601c844b3e10d9c71c82f845fcc3a6f"
+    },
+    {
+      "path": "scripts/test-desktop-bundle.mjs",
+      "sha256": "59da832f62049e6ede5715315eca545179e4c7a401f05122db79b1b817780ce5"
     }
   ]
 }

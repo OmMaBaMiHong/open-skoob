@@ -37,6 +37,9 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: npm run desktop:build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+      - name: Verify signed macOS backend
+        if: runner.os == 'macOS'
+        run: node scripts/test-desktop-bundle.mjs src-tauri/target/${{ matrix.target }}/release/bundle/macos/Open-Skoob.app
       - uses: actions/upload-artifact@v4
         with:
           name: Open-Skoob-${{ matrix.target }}
