@@ -3,9 +3,9 @@ import { cors } from 'hono/cors';
 import { bodyLimit } from 'hono/body-limit';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { streamSSE } from 'hono/streaming';
-import { randomBytes, randomUUID, createHash, scryptSync, timingSafeEqual } from 'node:crypto';
+import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { Store } from './store.mjs';
-import { ApiError, config, presets, serviceId, endpoint, resolveModel, listModels, complete } from './models.mjs';
+import { ApiError, config, presets, serviceId, canonicalService, isOfficialService, endpoint, resolveModel, listModels, complete } from './models.mjs';
 import { exportBook } from './export.mjs';
 import { selectedContext } from './context.mjs';
 import { mountFilms } from './film.mjs';
@@ -14,6 +14,8 @@ import { mountGeneral } from './general.mjs';
 import { Creation } from './creation.mjs';
 import { mountCloudLink } from './cloud-link.mjs';
 import { cloudOptions, isCloudPath, forwardCloud } from './cloud.mjs';
+import { freeAccess } from './free-access.mjs';
+import { cloudCatalog, isPublicCloudRead, isOfficialId, assertLocalId, CLOUD_ID } from './cloud-catalog.mjs';
 
 const hash = text => createHash('sha256').update(text).digest('hex');
 const stamp = () => new Date().toISOString();
@@ -26,21 +28,9 @@ async function body(c) {
   catch { throw new ApiError(400, 'INVALID_JSON', '请求体必须是 JSON 对象'); }
 }
 
-export function createApplication({ dataDir, password, origins = [], cloudEnv = process.env } = {}) {
+export function createApplication({ dataDir, origins = [], cloudEnv = process.env } = {}) {
   if (!dataDir) throw new Error('dataDir is required');
   const store = new Store(dataDir); const app = new Hono();
-  let firstRunPassword = null;
-  let savedAuth = store.get('settings', 'auth');
-  if (!savedAuth || password) {
-    const candidate = password || randomBytes(16).toString('base64url');
-    if (password && password.length < 10) throw new Error('SKOOB_LOCAL_PASSWORD must have at least 10 characters');
-    if (!savedAuth || !timingSafeEqual(Buffer.from(savedAuth.digest, 'hex'), scryptSync(candidate, savedAuth.salt, 32))) {
-      const salt = randomBytes(16).toString('hex'); savedAuth = { salt, digest: scryptSync(candidate, salt, 32).toString('hex') };
-      store.set('settings', 'auth', savedAuth);
-      for (const login of store.list('logins')) store.remove('logins', login.id);
-    }
-    if (!password) firstRunPassword = candidate;
-  }
   const subscribers = new Set(); let closed = false;
   function emit(event, data) {
     if (closed) return;
@@ -55,25 +45,25 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
   }
 
   const allowedOrigin = (origin, c) => origin === new URL(c.req.url).origin || origins.includes(origin);
-  app.use('*', async (c, next) => { c.header('X-Content-Type-Options', 'nosniff'); c.header('Referrer-Policy', 'no-referrer'); c.header('Cache-Control', 'no-store'); await next(); });
+  app.use('*', async (c, next) => { c.header('X-Content-Type-Options', 'nosniff'); c.header('Referrer-Policy', 'no-referrer'); await next(); if (!c.res.headers.has('Cache-Control')) c.header('Cache-Control', 'no-store'); });
   app.use('/api/*', bodyLimit({ maxSize: 90 * 1024 * 1024, onError: c => c.json({ error: { code: 'TOO_LARGE', message: '上传内容过大' } }, 413) }));
   app.use('/api/*', async (c, next) => {
+    const url = new URL(c.req.url);
+    if (!['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && !origins.includes(url.origin)) return c.json({ error: { code: 'HOST_DENIED', message: '请从本机地址访问工作室' } }, 403);
+    if (c.req.header('sec-fetch-site') === 'cross-site') return c.json({ error: { code: 'ORIGIN_DENIED', message: '请直接打开本地工作室' } }, 403);
     const origin = c.req.header('origin');
     if (origin && !allowedOrigin(origin, c)) return c.json({ error: { code: 'ORIGIN_DENIED', message: '此网站来源未获本地服务授权' } }, 403);
     await next();
   });
-  app.use('/api/*', cors({ origin: (origin, c) => allowedOrigin(origin, c) ? origin : undefined, credentials: true, allowHeaders: ['Content-Type', 'Authorization', 'X-Skoob-User', 'X-Skoob-Refresh', 'Idempotency-Key', 'X-Upload-Id', 'X-File-Name'], allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }));
+  app.use('/api/*', cors({ origin: (origin, c) => allowedOrigin(origin, c) ? origin : undefined, credentials: true, allowHeaders: ['Content-Type', 'Authorization', 'X-Skoob-User', 'X-Skoob-Refresh', 'Idempotency-Key', 'X-Upload-Id', 'X-File-Name', 'X-Skoob-Local'], allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }));
   app.onError((error, c) => { if (error instanceof SyntaxError || error.name === 'ZodError') return c.json({ error: { code: 'INVALID_INPUT', message: '请求数据格式不正确' } }, 400); return c.json({ error: { code: error.code || 'INTERNAL_ERROR', message: error instanceof ApiError ? error.message : '本地服务执行失败，请查看服务终端并检查输入' } }, error instanceof ApiError ? error.status : 500); });
   app.get('/api/health', c => c.json({ ok: true, mode: 'self-hosted' }));
   app.get('/api/v1/local/info', c => c.json({ mode: 'self-hosted', singleOwner: true }));
-  let failedLogins = 0; let loginWindow = Date.now();
-  app.post('/api/v1/local/login', async c => {
-    if (Date.now() - loginWindow > 60000) { failedLogins = 0; loginWindow = Date.now(); }
-    if (failedLogins >= 20) throw new ApiError(429, 'LOGIN_RATE_LIMIT', '尝试过多，请一分钟后重试');
-    const b = await body(c); const candidate = typeof b.password === 'string' && b.password.length <= 1024 ? b.password : '';
-    if (!timingSafeEqual(Buffer.from(savedAuth.digest, 'hex'), scryptSync(candidate, savedAuth.salt, 32))) { failedLogins++; throw new ApiError(401, 'LOGIN_FAILED', '本地访问密码不正确'); }
+  // Local session protects requests from other websites; it is not a user login.
+  app.post('/api/v1/local/session', async c => {
+    if (c.req.header('X-Skoob-Local') !== '1') throw new ApiError(403, 'LOCAL_SESSION_DENIED', '请从本地工作室建立连接');
     const token = randomBytes(32).toString('base64url'); const id = hash(token); const expiresAt = Date.now() + 7 * 86400000;
-    store.set('logins', id, { id, expiresAt }); failedLogins = 0;
+    store.set('logins', id, { id, expiresAt });
     setCookie(c, 'skoob_local', token, { httpOnly: true, sameSite: 'Strict', secure: new URL(c.req.url).protocol === 'https:', path: '/', maxAge: 7 * 86400 });
     return c.json({ token, userId: 'local', expiresAt });
   });
@@ -81,10 +71,16 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
     const header = c.req.header('authorization');
     const token = header?.startsWith('Bearer ') ? header.slice(7) : c.req.path === '/api/v1/events' ? c.req.query('access_token') : getCookie(c, 'skoob_local');
     const auth = token ? store.get('logins', hash(token)) : null;
-    if (!auth || auth.expiresAt <= Date.now()) return c.json({ error: { code: 'LOGIN_REQUIRED', message: '请使用本地访问密码登录' } }, 401);
+    if (!auth || auth.expiresAt <= Date.now()) return c.json({ error: { code: 'LOGIN_REQUIRED', message: '本地连接已过期，请刷新工作室' } }, 401);
     c.set('loginId', auth.id); await next();
   });
   app.get('/api/v1/account/status', c => c.json({ loggedIn: true, user: { username: '本地工作室', role: 'owner', platformAdmin: false }, expiresAt: null, sub2apiUrl: 'https://gaotk.com' }));
+  app.get('/api/v1/account/free-plan', async c => {
+    const cfg = cloudOptions(store, cloudEnv);
+    const response = await fetch(endpoint(cfg.baseUrl) + '/api/v1/account/free-plan', { signal: AbortSignal.timeout(10000), redirect: 'error' });
+    if (!response.ok) throw new ApiError(502, 'FREE_PLAN_UNAVAILABLE', '暂时无法读取官方套餐配置');
+    return c.json(await response.json());
+  });
   app.get('/api/v1/account/membership', async c => {
     const cfg = cloudOptions(store, cloudEnv); let cloud = null;
     if (cfg.key && cfg.userId) {
@@ -93,12 +89,21 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
         if (response.ok) cloud = await response.json();
       } catch { /* Cloud unavailable must never lock local work. */ }
     }
-    return c.json({ loggedIn: true, isMember: cloud?.isMember === true, entitlements: Array.isArray(cloud?.entitlements) ? cloud.entitlements : [], plan: cloud?.plan ?? null, expiresAt: cloud?.expiresAt ?? null, stale: Boolean(cfg.key && !cloud) });
+    const free = await access.status();
+    return c.json({ freePlan: free.ready ? free.plan : null, freeEntitlements: free.ready ? free.entitlements : [], loggedIn: true, isMember: cloud?.isMember === true, entitlements: Array.isArray(cloud?.entitlements) ? cloud.entitlements : [], plan: cloud?.plan ?? null, expiresAt: cloud?.expiresAt ?? null, stale: Boolean(cfg.key && !cloud) });
   });
   app.post('/api/v1/account/logout', c => { store.remove('logins', c.get('loginId')); deleteCookie(c, 'skoob_local', { path: '/' }); return c.json({ ok: true }); });
-  mountCloudLink(app, store, cloudEnv);
+  const access = freeAccess(store, cloudEnv); const catalog = cloudCatalog(store, cloudEnv, access);
+  mountCloudLink(app, store, cloudEnv, access);
+  app.get('/api/v1/local/cloud/access', async c => c.json(await access.status(c.req.query('refresh') === '1')));
+  app.post('/api/v1/local/cloud/key', async c => c.json(await access.connect((await body(c)).apiKey)));
+  app.delete('/api/v1/local/cloud/key', c => { store.remove('settings', 'freeAccess'); return c.json({ ok: true }); });
+  app.get('/api/v1/local/cloud/keys', async c => c.json(await access.keys(c.req.query('page'))));
+  app.post('/api/v1/local/cloud/keys/select', async c => c.json(await access.select((await body(c)).keyId)));
+  app.get('/api/v1/local/onboarding', c => c.json({ choice: store.get('settings', 'onboarding')?.choice || null }));
+  app.put('/api/v1/local/onboarding', async c => { const b = await body(c); if (!['official', 'local'].includes(b.choice)) throw new ApiError(400, 'INVALID_CHOICE', '请选择官方 Free 或自己的模型'); store.set('settings', 'onboarding', { choice: b.choice }); return c.json({ ok: true }); });
   app.get('/api/v1/tianyan/agents', async (c, next) => { if (c.req.query('graphId')) return next(); return c.json({ agents: store.list('agents') }); });
-  app.use('/api/v1/*', async (c, next) => { if (isCloudPath(c.req.path)) return forwardCloud(c.req.raw, store, cloudEnv); await next(); });
+  app.use('/api/v1/*', async (c, next) => { if (isCloudPath(c.req.path)) { const publicRead = c.req.method === 'GET' && isPublicCloudRead(c.req.path); if (publicRead) await access.requireFree(); return forwardCloud(c.req.raw, store, cloudEnv, publicRead); } await next(); });
 
   function services() {
     const entries = config(store).services; const ids = new Map(presets.map(p => [p.service, { ...p, connected: Boolean(store.secret(p.service)) }]));
@@ -129,11 +134,21 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
   app.put('/api/v1/services/config', updateConfig);
   app.get('/api/v1/project/default-model', c => { const cfg = config(store); return c.json({ service: cfg.service, defaultModel: cfg.defaultModel }); });
   app.put('/api/v1/project/default-model', updateConfig);
-  app.get('/api/v1/services/models', c => c.json({ groups: services().filter(s => s.connected).map(s => ({ service: s.service, label: s.label, models: (config(store).services.find(e => serviceId(e) === s.service)?.models || store.get('modelCatalogs', s.service, [])).map(m => typeof m === 'string' ? { id: m, name: m } : m) })) }));
-  app.get('/api/v1/services/:service/secret', c => { const key = store.secret(c.req.param('service')); return c.json({ configured: Boolean(key), last4: key.length >= 4 ? key.slice(-4) : '' }); });
-  app.put('/api/v1/services/:service/secret', async c => { const b = await body(c); if (typeof b.apiKey !== 'string' || b.apiKey.length > 10000) throw new ApiError(400, 'INVALID_KEY', '无效的 API Key'); store.secret(c.req.param('service'), b.apiKey.trim()); return c.json({ ok: true }); });
+  app.get('/api/v1/services/models', async c => {
+    const groups = await Promise.all(services().filter(s => s.connected).map(async s => {
+      if (isOfficialService(store, s.service)) {
+        try { return { service: s.service, label: s.label, models: await listModels(store, s.service) }; }
+        catch { return null; } // Failed/revoked rights never reuse a cached official catalog.
+      }
+      return { service: s.service, label: s.label, models: (config(store).services.find(e => serviceId(e) === s.service)?.models || store.get('modelCatalogs', s.service, [])).map(m => typeof m === 'string' ? { id: m, name: m } : m) };
+    }));
+    return c.json({ groups: groups.filter(Boolean) });
+  });
+  app.get('/api/v1/services/:service/secret', c => { const key = store.secret(canonicalService(store, c.req.param('service'))); return c.json({ configured: Boolean(key), last4: key.length >= 4 ? key.slice(-4) : '' }); });
+  app.put('/api/v1/services/:service/secret', async c => { const b = await body(c); if (typeof b.apiKey !== 'string' || b.apiKey.length > 10000) throw new ApiError(400, 'INVALID_KEY', '无效的 API Key'); const id = canonicalService(store, c.req.param('service')); store.transaction(() => { store.secret(id, b.apiKey.trim()); store.remove('modelCatalogs', id); }); return c.json({ ok: true }); });
   app.get('/api/v1/services/:service/models', async c => {
-    const id = c.req.param('service'); const e = config(store).services.find(e => serviceId(e) === id);
+    const id = canonicalService(store, c.req.param('service')); const e = config(store).services.find(e => serviceId(e) === id);
+    if (isOfficialService(store, id)) return c.json({ models: await listModels(store, id) });
     const saved = e?.models || store.get('modelCatalogs', id);
     if (saved && c.req.query('refresh') !== '1') return c.json({ models: saved.map(m => typeof m === 'string' ? { id: m, name: m } : m) });
     const models = await listModels(store, id); store.set('modelCatalogs', id, models); return c.json({ models });
@@ -143,7 +158,7 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
     catch (error) { return c.json({ ok: false, error: error instanceof ApiError ? error.message : '连接失败，请检查服务地址和网络' }, 400); }
   });
   app.delete('/api/v1/services/:service', c => {
-    const id = c.req.param('service'); const cfg = config(store); cfg.services = cfg.services.filter(e => serviceId(e) !== id);
+    const id = canonicalService(store, c.req.param('service')); const cfg = config(store); cfg.services = cfg.services.filter(e => serviceId(e) !== id);
     if (cfg.service === id) { cfg.service = null; cfg.defaultModel = null; }
     store.transaction(() => { store.set('settings', 'models', cfg); store.secret(id, ''); store.remove('modelCatalogs', id); }); return c.json({ ok: true });
   });
@@ -202,13 +217,13 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
       else { creation.confirm(book.id, loop.stepId); creation.start(book.id); }
       result = { response: loop.decision === 'retry' ? '已开始重新生成。' : '已确认，继续下一步。', snapshot: creation.book(book.id).snapshot };
     } else if (s.sessionKind === 'book-create' && !s.bookId) {
-      s.creationBrief = [instruction, selectedContext(store, input)].filter(Boolean).join('\n\n');
+      s.creationBrief = [instruction, await selectedContext(store, input, catalog.material)].filter(Boolean).join('\n\n');
       result = await creation.propose({ ...input, instruction: s.creationBrief }, signal, delta => emit('intent:delta', { sessionId: s.sessionId, text: delta, structured: true }));
     }
     else {
       const book = s.bookId ? creation.book(s.bookId) : null;
       const context = book ? '\n作品上下文：' + creation.context(book, { id: 'discussion' }) : '';
-      const response = await complete(store, input, [{ role: 'system', content: '你是用户的本地创作助手，帮助讨论、写作与修改。不要声称执行了未调用的四大引擎。' + context + '\n' + selectedContext(store, input) }, ...s.messages.slice(-20).map(m => ({ role: m.role, content: m.content }))], { signal, onDelta: delta => emit('draft:delta', { sessionId: s.sessionId, text: delta }) });
+      const response = await complete(store, input, [{ role: 'system', content: '你是用户的本地创作助手，帮助讨论、写作与修改。不要声称执行了未调用的四大引擎。' + context + '\n' + await selectedContext(store, input, catalog.material) }, ...s.messages.slice(-20).map(m => ({ role: m.role, content: m.content }))], { signal, onDelta: delta => emit('draft:delta', { sessionId: s.sessionId, text: delta }) });
       result = { response };
     }
     s.messages.push({ role: 'assistant', content: result.response || '', toolExecutions: result.details?.toolExecutions || [], timestamp: Date.now() }); s.updatedAt = Date.now();
@@ -237,15 +252,21 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
 
   // Local editable libraries start empty; these are persisted collections, not cloud catalog replicas.
   for (const [path, collection, key] of [['skills','skills','skills'], ['agent-templates','agentTemplates','templates'], ['genres','genres','genres']]) {
-    app.get(`/api/v1/${path}`, c => c.json({ [key]: store.list(collection) }));
-    app.post(`/api/v1/${path}`, async c => { const b = await body(c); const id = typeof b.id === 'string' ? b.id : randomUUID(); const value = { ...b, id, isMine: true, editable: true, source: 'project' }; store.set(collection, id, value); return c.json({ ok: true, id, [key.slice(0, -1)]: value }); });
-    app.put(`/api/v1/${path}/:id`, async c => { const b = await body(c); store.set(collection, c.req.param('id'), { ...b, id: c.req.param('id'), isMine: true, editable: true, source: 'project' }); return c.json({ ok: true }); });
-    app.delete(`/api/v1/${path}/:id`, c => { store.remove(collection, c.req.param('id')); return c.json({ ok: true }); });
+    app.get(`/api/v1/${path}`, async c => c.json({ [key]: await catalog.list(collection) }));
+    app.post(`/api/v1/${path}`, async c => { const b = await body(c); const id = typeof b.id === 'string' ? b.id : randomUUID(); assertLocalId(id); const value = { ...b, id, isMine: true, editable: true, source: 'project' }; store.set(collection, id, value); return c.json({ ok: true, id, [key.slice(0, -1)]: value }); });
+    app.put(`/api/v1/${path}/:id`, async c => { assertLocalId(c.req.param('id')); const b = await body(c); store.set(collection, c.req.param('id'), { ...b, id: c.req.param('id'), isMine: true, editable: true, source: 'project' }); return c.json({ ok: true }); });
+    app.delete(`/api/v1/${path}/:id`, c => { assertLocalId(c.req.param('id')); store.remove(collection, c.req.param('id')); return c.json({ ok: true }); });
   }
-  app.get('/api/v1/skills/store', c => c.json({ skills: store.list('skills') }));
-  app.post('/api/v1/skills/:id/install', c => { store.set('installedSkills', c.req.param('id'), { id: c.req.param('id') }); return c.json({ ok: true }); });
+  app.get('/api/v1/skills/store', async c => c.json({ skills: (await catalog.list('skills')).map(s => ({ ...s, installed: Boolean(store.get('installedSkills', s.id)) })) }));
+  app.post('/api/v1/skills/:id/install', async c => { if (!await catalog.material('skills', c.req.param('id'))) throw new ApiError(404, 'SKILL_NOT_FOUND', '技能不存在'); store.set('installedSkills', c.req.param('id'), { id: c.req.param('id') }); return c.json({ ok: true }); });
   app.post('/api/v1/skills/:id/uninstall', c => { store.remove('installedSkills', c.req.param('id')); return c.json({ ok: true }); });
-  app.get('/api/v1/agent-prototypes', c => c.json({ prototypes: store.list('agentTemplates').map(t => ({ id: t.id, kind: 'agent', name: t.name, role: t.domain || '', tags: t.keywords || [], description: t.content || '', assetId: t.id })) }));
+  app.get('/api/v1/agent-prototypes', async c => c.json({ prototypes: await catalog.list('prototypes') }));
+  app.get('/api/v1/genres/:id/cluster', async c => {
+    const id = c.req.param('id');
+    if (isOfficialId(id)) return c.json(await catalog.read('/genres/' + encodeURIComponent(id.slice(CLOUD_ID.length)) + '/cluster'));
+    const item = store.get('genres', id); if (!item) throw new ApiError(404, 'GENRE_NOT_FOUND', '本地流派不存在');
+    return c.json({ genreId: id, profile: item, body: item.body || item.content || '', books: [], agents: [] });
+  });
   app.get('/api/v1/agents', c => c.json({ agents: store.list('agents') }));
   app.get('/api/v1/graph/agents', c => c.json({ agents: store.list('agents') }));
   app.get('/api/v1/chat/sessions', c => c.json({ sessions: [] }));
@@ -256,7 +277,7 @@ export function createApplication({ dataDir, password, origins = [], cloudEnv = 
   app.get('/api/v1/capabilities', c => c.json({ skills: store.list('skills'), templates: store.list('agentTemplates'), installed: store.list('installedSkills').map(x => x.id) }));
   mountFilms(app, store);
   mountTheater(app, store, creation, emit);
-  const closeGeneral = mountGeneral(app, store);
+  const closeGeneral = mountGeneral(app, store, catalog.material);
   app.notFound(c => c.json({ error: { code: 'NOT_FOUND', message: '本地接口不存在' } }, 404));
-  return { app, store, creation, firstRunPassword, async close() { await closeGeneral(); for (const job of jobs.values()) job.controller.abort(); await Promise.allSettled([...jobs.values()].map(j => j.work)); await creation.close(); closed = true; subscribers.clear(); store.close(); } };
+  return { app, store, creation, async close() { await closeGeneral(); for (const job of jobs.values()) job.controller.abort(); await Promise.allSettled([...jobs.values()].map(j => j.work)); await creation.close(); closed = true; subscribers.clear(); store.close(); } };
 }

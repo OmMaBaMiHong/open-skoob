@@ -1,3 +1,4 @@
+import { selectedContext } from './context.mjs';
 import { randomUUID, createHash } from 'node:crypto';
 import { z } from 'zod';
 import { streamSSE } from 'hono/streaming';
@@ -14,7 +15,7 @@ const inputSchema = z.object({
 const stamp = () => new Date().toISOString();
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-export function mountGeneral(app, store) {
+export function mountGeneral(app, store, material) {
   const base = '/api/v1/general-agent'; const running = new Map(); const listeners = new Set(); let closing = false;
   const get = sid => { const s = store.get('generalSessions', sid); if (!s) throw new ApiError(404, 'SESSION_NOT_FOUND', '会话不存在'); return s; };
   const save = s => { s.updatedAt = stamp(); store.set('generalSessions', s.sessionId, s); };
@@ -69,7 +70,7 @@ export function mountGeneral(app, store) {
     if (input.creationStrategy === 'simulate' || input.capabilityRefs.some(r => ['source','engine'].includes(r.kind))) throw new ApiError(409, 'CLOUD_TOOL_REQUIRED', '此操作需要官方引擎，请从对应云端工具入口使用。普通对话和基础创作可直接使用自选模型。');
     resolveModel(store, input.model);
     const resourceText = input.parts.filter(p => p.type === 'resource').map(p => { const a = attachment(s.sessionId, p.ref.id); if (a.meta.revision !== p.ref.revision || a.meta.status !== 'ready') throw new ApiError(409, 'ATTACHMENT_NOT_READY', '附件尚不能读取'); return `附件 ${a.meta.filename}：\n${a.content}`; });
-    const selected = [...input.selectedSkillAssetIds.map(k => ['skills', k]), ...input.selectedAgentAssetIds.map(k => ['agentTemplates', k])].map(([collection, key]) => { const item = store.get(collection, key); if (!item) throw new ApiError(404, 'ASSET_NOT_FOUND', '选中的本地能力不存在'); return JSON.stringify(item); });
+    const selected = await selectedContext(store, { requestedSkills: input.selectedSkillAssetIds, capabilityRefs: [...input.capabilityRefs, ...input.selectedAgentAssetIds.map(id => ({ kind: 'template', id }))] }, material);
     const prompt = input.parts.filter(p => p.type === 'text').map(p => p.text).join('\n'); if (!prompt.trim() && !resourceText.length) throw new ApiError(400, 'EMPTY_MESSAGE', '请填写内容');
     const run = { id: randomUUID(), status: 'running', summary: '正在调用你选定的模型', revision: 1, cancelRequested: false }; s.runs.push(run); s.messages.push({ ...input, state: 'applied' });
     if (s.messages.length === 1) s.title = prompt.slice(0,40) || '附件对话';
@@ -79,7 +80,7 @@ export function mountGeneral(app, store) {
     const controller = new AbortController();
     const history = s.events.filter(e => e.type === 'message' && e.payload.final && e.payload.messageId !== input.messageId).slice(-20).map(e => ({ role: e.payload.role, content: e.payload.parts.filter(p => p.type === 'text').map(p => p.text).join('\n') }));
     const assistantId = randomUUID(); let accumulated = ''; let lastPartial = 0;
-    const work = complete(store, input.model, [{ role: 'system', content: '你是本地创作助手，帮助写作和分析用户提供的资料。没有调用工具时不要声称调用四大引擎、联网检索或修改了作品。\n用户自定义能力：' + selected.join('\n') }, ...history, { role: 'user', content: [prompt, ...resourceText].join('\n\n') }], { signal: controller.signal, onDelta: delta => { accumulated += delta; if (Date.now() - lastPartial < 1000) return; lastPartial = Date.now(); const current = get(s.sessionId); add(current, run.id, 'message', { messageId: assistantId, role: 'assistant', parts: [{ type: 'text', text: accumulated }], final: false }); } })
+    const work = complete(store, input.model, [{ role: 'system', content: '你是本地创作助手，帮助写作和分析用户提供的资料。没有调用工具时不要声称调用四大引擎、联网检索或修改了作品。\n用户自定义能力：' + selected }, ...history, { role: 'user', content: [prompt, ...resourceText].join('\n\n') }], { signal: controller.signal, onDelta: delta => { accumulated += delta; if (Date.now() - lastPartial < 1000) return; lastPartial = Date.now(); const current = get(s.sessionId); add(current, run.id, 'message', { messageId: assistantId, role: 'assistant', parts: [{ type: 'text', text: accumulated }], final: false }); } })
       .then(answer => { const current = get(s.sessionId); add(current, run.id, 'message', { messageId: assistantId, role: 'assistant', parts: [{ type: 'text', text: answer }], final: true }); const r = current.runs.find(r => r.id === run.id); r.status = 'succeeded'; r.summary = '已完成'; r.revision++; add(current, run.id, 'status', { status: r.status, summary: r.summary }); })
       .catch(error => { const current = get(s.sessionId); const r = current.runs.find(r => r.id === run.id); r.status = controller.signal.aborted ? 'cancelled' : 'failed'; r.summary = controller.signal.aborted ? '已停止，已生成内容保留在会话中' : error instanceof ApiError ? error.message : '模型调用失败，请检查服务连接'; r.revision++; add(current, run.id, 'status', { status: r.status, summary: r.summary }); })
       .finally(() => running.delete(s.sessionId));

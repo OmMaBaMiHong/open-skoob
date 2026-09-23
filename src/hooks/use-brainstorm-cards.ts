@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchBrainstormCardPage, reportBrainstormEvents, type BrainstormCard } from "../lib/api";
 
 /** 横向灵感轨道：浏览历史时冻结首屏，避免自动刷新改变阅读位置。 */
-export function useBrainstormCards(canRefresh: () => boolean) {
+export function useBrainstormCards(canRefresh: () => boolean, enabled = true) {
   const [cards, setCards] = useState<ReadonlyArray<BrainstormCard>>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -14,7 +14,7 @@ export function useBrainstormCards(canRefresh: () => boolean) {
   refreshAllowed.current = canRefresh;
   const seen = useRef(new Set<string>());
   const load = useCallback(async (append: boolean, refresh = false) => {
-    if (busy.current || (append && !cursor.current)) return;
+    if (!enabled || busy.current || (append && !cursor.current)) return;
     busy.current = true;
     setLoading(true); setError(null);
     try {
@@ -32,14 +32,15 @@ export function useBrainstormCards(canRefresh: () => boolean) {
       busy.current = false;
       if (mounted.current) setLoading(false);
     }
-  }, []);
+  }, [enabled]);
   useEffect(() => {
+    if (!enabled) { setCards([]); setNextCursor(null); return; }
     mounted.current = true;
     const refresh = () => { if (!document.hidden && refreshAllowed.current()) void load(false); };
     refresh();
     const timer = window.setInterval(refresh, 60_000);
     document.addEventListener("visibilitychange", refresh);
     return () => { mounted.current = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", refresh); };
-  }, [load]);
+  }, [load, enabled]);
   return { cards, loading, error, hasMore: nextCursor !== null, loadMore: () => load(true), retry: () => load(cursor.current !== null, true) };
 }

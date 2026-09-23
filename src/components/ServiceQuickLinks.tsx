@@ -20,7 +20,7 @@ interface QuickLink {
  */
 const LINKS: Readonly<Record<string, ReadonlyArray<QuickLink>>> = {
   gaotk: [
-    { label: "领取 API Key", path: "token", primary: true },
+    { label: "领取 API Key", path: "keys", primary: true },
     { label: "兑换 / 充值", path: "redeem" },
     { label: "套餐", path: "purchase" },
   ],

@@ -95,6 +95,7 @@ if (typeof window !== "undefined") {
     if (readAuth()) void load();
   };
   window.addEventListener(AUTH_CHANGED_EVENT, changed);
+  window.addEventListener("skoob:cloud-account-changed", () => { revision++; inflight = null; void load(true); });
   window.addEventListener("storage", (event) => {
     if (event.key === null || event.key === "skoob.auth.token" || event.key === "skoob.auth.userId") changed();
   });

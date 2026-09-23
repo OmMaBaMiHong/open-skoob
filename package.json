@@ -11,7 +11,9 @@
     "dev:web": "vite",
     "dev:backend": "node --env-file-if-exists=.env server/index.mjs",
     "start": "node --env-file-if-exists=.env server/index.mjs",
-    "test": "node --test server/*.test.mjs"
+    "test": "node --test server/*.test.mjs",
+    "desktop:build": "tauri build",
+    "desktop:dev": "tauri dev"
   },
   "dependencies": {
     "@hono/node-server": "1.19.17",
@@ -33,7 +35,9 @@
     "@types/react-dom": "18.3.7",
     "@vitejs/plugin-react": "4.7.0",
     "typescript": "5.9.3",
-    "vite": "6.4.3"
+    "vite": "6.4.3",
+    "@tauri-apps/cli": "2.11.4",
+    "esbuild": "0.25.12"
   },
   "description": "Self-hosted Skoob writing workspace with a local backend and optional cloud engines",
   "engines": {

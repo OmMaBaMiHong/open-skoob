@@ -20,6 +20,7 @@ import {
   type TianwangCatalog, type TianwangDeconstructionStatus,
   type CapabilityRef,
 } from "../lib/api";
+import { useCloudAccess, CloudAccessPrompt } from "../cloud-access";
 import { Composer } from "../components/Composer";
 import { DetailModal, GenreTeamDetail } from "../components/GenreTeamDetail";
 import { genreTeamOf } from "../types/teams";
@@ -192,6 +193,10 @@ function catalogToBookTemplates(catalog: TianwangCatalog): ReadonlyArray<BookTem
 }
 
 export function CreateHomePage() {
+  const cloudAccess = useCloudAccess();
+  const templatesAllowed = cloudAccess.ready && cloudAccess.entitlements.includes("templates.read");
+  const hotboardAllowed = cloudAccess.ready && cloudAccess.entitlements.includes("hotboard.read");
+  const brainstormAllowed = cloudAccess.ready && cloudAccess.entitlements.includes("brainstorm.read");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
@@ -314,8 +319,10 @@ export function CreateHomePage() {
 
   // 加载天王模板（书籍）+ 智能体原型
   useEffect(() => {
+    let alive = true;
+    if (!templatesAllowed) { setBookTemplates([]); setAgentPrototypes(previous => previous.filter(x => !x.id.startsWith("official:"))); setOpenGenreTemplate(null); setAssetGateBook(null); setSelectedTemplate(null); setLoading(false); }
     Promise.all([
-      fetchTianwangCatalog().then(catalogToBookTemplates).then(books => { setBookTemplates(books); setLoading(false); }),
+      (templatesAllowed ? fetchTianwangCatalog() : Promise.resolve({ authors: [] } as unknown as TianwangCatalog)).then(catalogToBookTemplates).then(books => { if (alive) { setBookTemplates(books); setLoading(false); } }),
       fetchAgentPrototypes().then((protos) =>
         protos.map((p, i) => ({
           id: p.id, kind: "agent" as const, name: p.name, role: p.role,
@@ -324,14 +331,16 @@ export function CreateHomePage() {
           category: p.category ?? null,
           cover: gradientForIndex(i + 5),
         })),
-      ).then(setAgentPrototypes),
+      ).then(items => { if (alive) setAgentPrototypes(templatesAllowed ? items : items.filter(x => !x.id.startsWith("official:"))); }),
     ])
-      .then(() => { setLoading(false); })
+      .then(() => { if (alive) setLoading(false); })
       .catch((err) => {
+        if (!alive) return;
         setError(err instanceof Error ? err.message : "加载模板失败");
         setLoading(false);
       });
-  }, []);
+    return () => { alive = false; };
+  }, [templatesAllowed]);
 
   // 当前展示的模板列表
   const currentTemplates: ReadonlyArray<Template> = (() => {
@@ -785,7 +794,7 @@ export function CreateHomePage() {
 
             {/* ── 天魔脑洞：原有脑洞卡与全网热榜 ── */}
             <div hidden={mainTab !== "hot"}>
-              <HotboardPanel
+              {(hotboardAllowed || brainstormAllowed) ? <HotboardPanel key={cloudAccess.entitlements.join(",")} hotboardEnabled={hotboardAllowed} brainstormEnabled={brainstormAllowed}
                 onScan={() => selectMainTab("scan")}
                 onPick={(seed, cardId) => {
                   setInput(seed);
@@ -799,12 +808,13 @@ export function CreateHomePage() {
                     ta?.scrollIntoView({ behavior: "smooth", block: "center" });
                   });
                 }}
-              />
+              /> : <CloudAccessPrompt />}
             </div>
 
             {/* ── 天魔扫榜：同级入口，切换后保留已打开的报告 ── */}
             <div hidden={mainTab !== "scan"}>
-              {(scanVisited || mainTab === "scan") && <ScanPanel onPick={(seed) => {
+              {!hotboardAllowed && <CloudAccessPrompt />}
+              {hotboardAllowed && (scanVisited || mainTab === "scan") && <ScanPanel onPick={(seed) => {
                 setInput(seed);
                 setSelectedTemplate(null);
                 setSourceCardId(null);
@@ -817,7 +827,8 @@ export function CreateHomePage() {
             </div>
 
             {/* ── 天王模板：拆书状态筛选（一张书架 + 状态 chip）── */}
-            {mainTab === "book" && (
+            {mainTab === "book" && !templatesAllowed && <CloudAccessPrompt />}
+            {mainTab === "book" && templatesAllowed && (
               <div className="category-bar" style={{ marginBottom: 12 }}>
                 <button
                   onClick={() => setReadyFilter("all")}
@@ -934,10 +945,10 @@ export function CreateHomePage() {
             )}
 
             {/* 热榜页没有"模板"这个概念，别把模板空状态漏出来 */}
-            {mainTab !== "hot" && !loading && !error && currentTemplates.length === 0 && (
+            {mainTab !== "hot" && mainTab !== "scan" && (mainTab !== "book" || templatesAllowed) && !loading && !error && currentTemplates.length === 0 && (
               <div style={{ textAlign: "center", padding: "60px 0", color: "var(--faint)" }}>
                 <Search size={32} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
-                <p>{mainTab === "genre" ? "流派库为空或仍在读取——/api/v1/genres 没有返回任何流派" : "该分类暂无模板"}</p>
+                <p>{!templatesAllowed ? "暂无本地模板；连接 Free Key 后可浏览官方模板" : "该分类暂无模板"}</p>
               </div>
             )}
           </>

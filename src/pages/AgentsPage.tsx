@@ -1,3 +1,4 @@
+import { useCloudAccess } from "../cloud-access";
 /**
  * AgentsPage —— 智能体 · 技能 · 连接器
  *
@@ -61,6 +62,8 @@ interface Connector {
 }
 
 export function AgentsPage() {
+  const cloud = useCloudAccess();
+  const templatesAllowed = cloud.ready && cloud.entitlements.includes("templates.read");
   const navigate = useNavigate();
   const { t } = useI18n();
   const categoryLabel = useGenreCategoryLabel();
@@ -91,6 +94,8 @@ export function AgentsPage() {
   const [openSkill, setOpenSkill] = useState<SkillInfo | null>(null);
   const { isInstalled, toggle: toggleSkill, installed } = useInstalledSkills();
   useEffect(() => {
+    let alive = true;
+    if (!templatesAllowed) { setSkills(previous => previous.filter(x => !x.id.startsWith("official:"))); setStoreSkills(previous => previous.filter(x => !x.id.startsWith("official:"))); setGenres(previous => previous.filter(x => !x.id.startsWith("official:"))); setTemplates(previous => previous.filter(x => !x.id.startsWith("official:"))); setOpenGenre(null); setOpenSkill(null); }
     void Promise.all([
       fetchSkills().catch(() => []),
       fetchBooks().catch(() => []),
@@ -102,9 +107,10 @@ export function AgentsPage() {
       fetchSkillStore().catch(() => []),
       fetchAgentTemplates().catch(() => []),
     ]).then(([s, b, ag, g, rs, nt, dm, store, tpl]) => {
-      setSkills(s); setBooks(b); setAgents(ag); setGenres(g);
+      if (!alive) return;
+      setSkills(templatesAllowed ? s : s.filter(x => !x.id.startsWith("official:"))); setBooks(b); setAgents(ag); setGenres(templatesAllowed ? g : g.filter(x => !x.id.startsWith("official:")));
       setMasters(dm);
-      setStoreSkills(store); setTemplates(tpl);
+      setStoreSkills(templatesAllowed ? store : store.filter(x => !x.id.startsWith("official:"))); setTemplates(templatesAllowed ? tpl : tpl.filter(x => !x.id.startsWith("official:")));
       const notifyChannels = ["feishu", "telegram", "webhook", "wechatWork"] as const;
       const notifyNames: Record<string, string> = {
         feishu: "飞书", telegram: "Telegram", webhook: "Webhook", wechatWork: "企业微信",
@@ -129,8 +135,9 @@ export function AgentsPage() {
           connected: false, status: "尚未接入",
         },
       ]);
-    }).finally(() => setLoading(false));
-  }, []);
+    }).finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [templatesAllowed]);
 
   /* ── 技能：安装/卸载走订阅接口（计数在服务端），本地 store 只管召唤队列 ── */
   const refreshSkillData = useCallback(() => {

@@ -1,0 +1,51 @@
+name: Upload desktop release
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Desktop packages run ID
+        required: true
+        type: string
+permissions:
+  actions: read
+  contents: write
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_ID: ${{ inputs.run_id }}
+      RELEASE_TAG: desktop-v0.1.0-beta.1
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+          pattern: Open-Skoob-*
+          path: packages
+      - name: Verify source and upload missing draft assets
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          repo = os.environ['GITHUB_REPOSITORY']
+          def api(path):
+              return json.loads(subprocess.check_output(['gh', 'api', 'repos/' + repo + '/' + path]))
+          run = api('actions/runs/' + os.environ['RUN_ID'])
+          assert run['conclusion'] == 'success' and run['path'] == '.github/workflows/desktop.yml'
+          release = next(r for r in api('releases') if r['tag_name'] == os.environ['RELEASE_TAG'])
+          assert release['draft'] and release['target_commitish'] == run['head_sha']
+          files = sorted((p for p in pathlib.Path('packages').rglob('*') if p.suffix in ('.dmg', '.exe')), key=lambda p: p.name)
+          assert len(files) == 3 and len({p.name for p in files}) == 3
+          assert sum(p.suffix == '.dmg' for p in files) == 2
+          def digest(path):
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+          checksums = pathlib.Path('SHA256SUMS.txt')
+          checksums.write_text(''.join(digest(p) + '  ' + p.name + '\n' for p in files))
+          existing = {a['name']: a for a in release['assets']}
+          for path in files + [checksums]:
+              if path.name in existing:
+                  assert existing[path.name]['state'] == 'uploaded'
+                  assert existing[path.name]['digest'] == 'sha256:' + digest(path)
+              else:
+                  subprocess.run(['gh', 'release', 'upload', os.environ['RELEASE_TAG'], str(path), '--repo', repo], check=True)
+          print('All installer assets uploaded; draft awaits final publication.')

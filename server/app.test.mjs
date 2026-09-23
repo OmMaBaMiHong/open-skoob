@@ -13,20 +13,22 @@ const implementation = await import('./app.mjs').catch(e => {
 async function fixture(t, options = {}) {
   assert.equal(typeof implementation.createApplication, 'function', 'standalone backend must exist');
   const dir = mkdtempSync(join(tmpdir(), 'skoob-local-test-'));
-  let app = implementation.createApplication({ dataDir: dir, password: 'test-password', ...options });
+  let app = implementation.createApplication({ dataDir: dir, ...options });
   t.after(async () => { await app.close(); rmSync(dir, { recursive: true, force: true }); });
-  const login = await app.app.request('/api/v1/local/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: 'test-password' }) });
+  const login = await app.app.request('/api/v1/local/session', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Skoob-Local': '1' }, body: JSON.stringify({}) });
   assert.equal(login.status, 200);
   const auth = await login.json();
-  const request = (path, method = 'GET', body, extra = {}) => app.app.request('/api/v1' + path, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}`, 'X-Skoob-User': auth.userId, ...extra }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
+  const request = (path, method = 'GET', body, extra = {}) => app.app.request('/api/v1' + path, { method, headers: { 'Content-Type': 'application/json', 'X-Skoob-Local': '1', Authorization: `Bearer ${auth.token}`, 'X-Skoob-User': auth.userId, ...extra }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
   const json = async (path, method, body, extra) => { const r = await request(path, method, body, extra); const b = await r.json(); assert.ok(r.ok, JSON.stringify(b)); return b; };
-  return { request, json, auth, get app() { return app; }, restart: async () => { await app.close(); app = implementation.createApplication({ dataDir: dir, password: 'test-password', ...options }); } };
+  return { request, json, auth, get app() { return app; }, restart: async () => { await app.close(); app = implementation.createApplication({ dataDir: dir, ...options }); } };
 }
 
 test('local deployment protects credentials and retains books, chapters and configuration after restart', async t => {
   const f = await fixture(t);
   assert.equal((await f.app.app.request('/api/v1/books')).status, 401);
-  assert.equal((await f.app.app.request('/api/v1/local/login', { method: 'POST', body: JSON.stringify({ password: 'wrong' }), headers: { 'Content-Type': 'application/json' } })).status, 401);
+  assert.equal((await f.app.app.request('/api/v1/local/session', { method: 'POST' })).status, 403);
+  assert.equal((await f.app.app.request('http://evil.example/api/v1/local/session', { method: 'POST', headers: { 'X-Skoob-Local': '1' } })).status, 403);
+  assert.equal((await f.app.app.request('/api/v1/local/session', { method: 'POST', headers: { 'X-Skoob-Local': '1', 'Sec-Fetch-Site': 'cross-site' } })).status, 403);
   assert.equal((await f.request('/books/create', 'POST', { title: 'forged' }, { Origin: 'https://evil.example' })).status, 403);
   const created = await f.json('/books/create', 'POST', { title: '本地故事', genre: '悬疑', targetChapters: 2, chapterWordCount: 2000 });
   await f.json(`/books/${created.bookId}/chapters/1`, 'PUT', { content: '第一章，真正保存在本地的内容。', title: '开篇' });

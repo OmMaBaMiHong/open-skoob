@@ -1,3 +1,4 @@
+import { useCloudAccess } from "../cloud-access";
 import { readAuth } from "../lib/auth-storage";
 /**
  * Composer 需要的全部数据，一次拉齐。
@@ -54,6 +55,8 @@ export interface ComposerData {
 
 export function useComposerData(opts: { graphId?: string; preserveExplicitModel?: boolean } = {}): ComposerData {
   const { graphId, preserveExplicitModel = false } = opts;
+  const cloud = useCloudAccess();
+  const templatesAllowed = cloud.ready && cloud.entitlements.includes("templates.read");
   const [skills, setSkills] = useState<ReadonlyArray<SkillInfo>>([]);
   const [agents, setAgents] = useState<ReadonlyArray<GraphAgent>>([]);
   const [genres, setGenres] = useState<ReadonlyArray<GenreInfo>>([]);
@@ -145,16 +148,19 @@ export function useComposerData(opts: { graphId?: string; preserveExplicitModel?
       // 使用态选择最后拍板（可能覆盖上面的默认，也可能触发回落提示）。
       resolveSelected();
     })();
-  }, [resolveSelected]);
+  }, [resolveSelected, cloud.ready]);
 
   useEffect(() => {
+    let alive = true;
+    if (!templatesAllowed) { setSkills(previous => previous.filter(x => !x.id.startsWith("official:"))); setGenres(previous => previous.filter(x => !x.id.startsWith("official:"))); setTemplates(previous => previous.filter(x => !x.id.startsWith("official:"))); }
     void Promise.all([
       fetchSkills().catch(() => []),
       fetchGenres().catch(() => []),
       fetchAgentTemplates().catch(() => []),
       readAuth() ? fetchProjectLlm().catch(() => null) : Promise.resolve(null),
-    ]).then(([sk, ge, tp, lm]) => { setSkills(sk); setGenres(ge); setTemplates(tp); setLlm(lm); });
-  }, []);
+    ]).then(([sk, ge, tp, lm]) => { if (alive) { setSkills(templatesAllowed ? sk : sk.filter(x => !x.id.startsWith("official:"))); setGenres(templatesAllowed ? ge : ge.filter(x => !x.id.startsWith("official:"))); setTemplates(templatesAllowed ? tp : tp.filter(x => !x.id.startsWith("official:"))); setLlm(lm); } });
+    return () => { alive = false; };
+  }, [templatesAllowed]);
 
   /**
    * 智能体单独拉：本书优先，**本书为空时回落全量**。

@@ -5,3 +5,9 @@ dist/
 !.env.example
 *.tsbuildinfo
 data/
+
+.desktop-cache/
+src-tauri/target/
+src-tauri/resources/
+src-tauri/binaries/
+src-tauri/gen/

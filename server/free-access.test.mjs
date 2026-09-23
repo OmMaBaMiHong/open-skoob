@@ -1,0 +1,232 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { createApplication } from './app.mjs';
+import { selectedContext } from './context.mjs';
+import { cloudCatalog } from './cloud-catalog.mjs';
+import { freeAccess } from './free-access.mjs';
+import { complete, resolveModel } from './models.mjs';
+
+const plan = { id: 'free', name: 'Free 免费套餐', enabled: true, entitlements: ['brainstorm.read', 'hotboard.read', 'templates.read'] };
+const grant = { ready: true, plan, entitlements: plan.entitlements, isMember: false };
+
+test('legacy official service migrates once without replacing a different configured Key', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'skoob-official-migration-')); let instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  t.after(async () => { await instance.close(); rmSync(dir, { recursive: true, force: true }); });
+  const legacy = 'custom:Skoob 官方 #123456abcdef';
+  instance.store.set('settings', 'models', { service: legacy, defaultModel: 'selected', services: [{ service: 'custom', name: 'Skoob 官方 #123456abcdef', baseUrl: 'https://lai.gaotk.com/v1' }, { service: 'custom', name: 'own', baseUrl: 'http://localhost:1234/v1' }] });
+  instance.store.secret(legacy, 'fixture-old'); instance.store.secret('gaotk', 'fixture-different'); instance.store.secret('custom:own', 'fixture-own');
+  instance.store.set('settings', 'freeAccess', { method: 'key', service: legacy, keyId: 'old' });
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  assert.equal(instance.store.secret('gaotk'), 'fixture-different');
+  assert.equal(instance.store.get('settings', 'freeAccess').service, legacy);
+  instance.store.secret('gaotk', '');
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  assert.equal(instance.store.secret('gaotk'), 'fixture-old');
+  assert.equal(instance.store.get('settings', 'freeAccess').service, 'gaotk');
+  const cfg = instance.store.get('settings', 'models');
+  assert.equal(cfg.services.length, 2); assert.equal(cfg.service, 'gaotk'); assert.equal(cfg.defaultModel, 'selected');
+  assert.equal(resolveModel(instance.store, { service: legacy, model: 'selected' }).key, 'fixture-old');
+  assert.equal(instance.store.secret('custom:own'), 'fixture-own');
+  assert.ok(instance.store.get('settings', 'officialServiceBackup'));
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  assert.deepEqual(instance.store.get('settings', 'models'), cfg);
+});
+
+test('official models require a Key and live Free entitlement, never a built-in or stale catalog', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'skoob-model-right-test-'));
+  const instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  t.after(async () => { await instance.close(); rmSync(dir, { recursive: true, force: true }); });
+  const session = await (await instance.app.request('/api/v1/local/session', { method: 'POST', headers: { 'X-Skoob-Local': '1' } })).json();
+  const request = (path, method = 'GET', body) => instance.app.request('/api/v1' + path, { method, headers: { Authorization: `Bearer ${session.token}`, 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  let enabled = true; const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    const path = String(url); const key = new Headers(init.headers).get('authorization'); calls.push({ path, key });
+    if (path.startsWith('https://api.kilo.ai/api/openrouter/')) {
+      assert.equal(key, null);
+      if (path.endsWith('/models')) return Response.json({ data: [{ id: 'allowed:free', pricing: { prompt: '0', completion: '0' } }] });
+      if (path.endsWith('/chat/completions')) return Response.json({ choices: [{ message: { content: 'ok' } }] });
+    }
+    assert.equal(key, 'Bearer fixture-official-key');
+    if (path.endsWith('/open/access?refresh=1')) return Response.json(grant);
+    if (path.endsWith('/open/catalog/models')) return enabled ? Response.json({ data: [{ id: 'allowed:free', name: 'Allowed · Free' }] }) : Response.json({ error: { code: 'FREE_ENTITLEMENT_REQUIRED', message: '免费模型权益已关闭' } }, { status: 403 });
+    if (path.endsWith('/chat/completions')) return Response.json({ choices: [{ message: { content: 'ok' } }] });
+    throw new Error('Unexpected network request: ' + path);
+  });
+  instance.store.set('modelCatalogs', 'gaotk', [{ id: 'old:free' }]);
+  assert.equal((await request('/services/gaotk/models')).status, 403);
+  assert.equal(calls.length, 0);
+  const connected = await (await request('/local/cloud/key', 'POST', { apiKey: 'fixture-official-key' })).json();
+  assert.equal(connected.service, 'gaotk');
+  const services = (await (await request('/services')).json()).services;
+  assert.equal(services.filter(s => /Skoob/.test(s.label)).length, 1);
+  assert.deepEqual((await (await request('/services/gaotk/models')).json()).models.map(m => m.id), ['allowed:free']);
+  await assert.rejects(complete(instance.store, { service: 'gaotk', model: 'not-authorized' }, []), { code: 'MODEL_NOT_AUTHORIZED' });
+  assert.equal(calls.some(c => c.path.endsWith('/chat/completions')), false);
+  assert.equal(await complete(instance.store, { service: 'gaotk', model: 'allowed:free' }, [], {}), 'ok');
+  const generated = calls.filter(c => c.path.endsWith('/chat/completions')).length;
+  enabled = false;
+  assert.equal((await request('/services/gaotk/models')).status, 403);
+  assert.equal((await (await request('/services/models')).json()).groups.some(g => g.service === 'gaotk'), false);
+  await assert.rejects(complete(instance.store, { service: 'gaotk', model: 'allowed:free' }, []), { code: 'FREE_ENTITLEMENT_REQUIRED' });
+  assert.equal(calls.filter(c => c.path.endsWith('/chat/completions')).length, generated);
+  await request('/services/gaotk/secret', 'PUT', { apiKey: '' });
+  assert.equal((await request('/services/gaotk/models')).status, 403);
+});
+
+test('Free onboarding validates the upstream owner/group/status and gates real catalogs without granting membership', async t => {
+  const calls = []; let active = true, reachable = true, accountId = '42';
+  const free = { id: 7, user_id: 42, key: 'fixture-free-secret', name: 'My Free', status: 'active', group_id: 2, group: { id: 2, name: 'openskoob-free', status: 'active', rate_multiplier: 0 }, expires_at: null };
+  const upstream = createServer(async (req, res) => {
+    let raw = ''; for await (const part of req) raw += part;
+    calls.push({ path: req.url, auth: req.headers.authorization, user: req.headers['x-skoob-user'], method: req.method });
+    const reply = (data, status = 200) => { res.statusCode = status; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(data)); };
+    if (!reachable) return reply({ message: 'Unavailable' }, 503);
+    if (req.url === '/api/v1/account/verify-key') return reply({ ok: true, user: { id: 42 } });
+    if (req.url === '/api/v1/account/status') return req.headers['x-skoob-user'] === accountId ? reply({ loggedIn: true, user: { id: accountId }, sub2apiUrl: base }) : reply({ loggedIn: false });
+    if (req.url === '/api/v1/account/membership') return reply({ loggedIn: true, isMember: false, entitlements: [], plan: null });
+    const key = { ...free, status: active ? 'active' : 'disabled' };
+    if (req.url.startsWith('/api/v1/keys?')) return reply({ code: 0, data: { items: [key, { ...key, id: 8, group: { ...key.group, name: 'paid' } }], total: 2 } });
+    if (req.url === '/api/v1/keys/7') return reply({ code: 0, data: key });
+    if (req.url === '/api/v1/keys/8') return reply({ code: 0, data: { ...key, id: 8, group: { ...key.group, name: 'paid' } } });
+    if (req.url === '/api/v1/keys/9') return reply({ code: 0, data: { ...key, id: 9, user_id: 99 } });
+    if (req.url === '/api/v1/keys/10') return reply({ code: 0, data: { ...key, id: 10, expires_at: '2020-01-01T00:00:00Z' } });
+    if (req.url === '/api/v1/open/access?refresh=1') return reply(grant);
+    if (req.url.startsWith('/api/v1/open/catalog/')) { assert.equal(req.headers.authorization, `Bearer ${free.key}`); req.url = req.url.replace('/api/v1/open/catalog/', '/api/v1/'); }
+    if (req.url === '/api/v1/genres') return reply({ genres: [{ id: 'same', name: 'Official genre' }] });
+    if (req.url === '/api/v1/genres/same/cluster') return reply({ profile: { name: 'Official genre' }, body: 'official writing guidance', books: [], agents: [] });
+    if (req.url === '/api/v1/agent-templates') return reply({ templates: [{ id: 'same', name: 'Official template', content: 'public character' }] });
+    if (req.url === '/api/v1/agent-prototypes') return reply({ prototypes: [{ id: 'same', name: 'Public character', tags: [] }] });
+    if (req.url === '/api/v1/skills') return reply({ skills: [{ id: 'same', name: 'Public skill', body: 'public guidance' }] });
+    if (req.url.startsWith('/api/v1/tianmo/brainstorm/cards')) return reply({ cards: [{ id: 'card', title: 'Real upstream inspiration' }] });
+    if (req.url === '/api/v1/tianmo/inspiration/plan') return reply({ error: { code: 'MEMBERSHIP_REQUIRED', message: '此功能需要对应会员权益' } }, 403);
+    return reply({ error: 'NOT_FOUND' }, 404);
+  });
+  await new Promise(r => upstream.listen(0, '127.0.0.1', r)); const base = `http://127.0.0.1:${upstream.address().port}`;
+  t.after(() => new Promise(r => upstream.close(r)));
+  const realFetch = globalThis.fetch;
+  t.mock.method(globalThis, 'fetch', (url, init) => String(url) === 'https://lai.gaotk.com/v1/models' ? Promise.resolve(Response.json({ data: [{ id: 'free-model' }] })) : realFetch(url, init));
+  const dir = mkdtempSync(join(tmpdir(), 'skoob-free-test-')); let instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  t.after(async () => { await instance.close(); rmSync(dir, { recursive: true, force: true }); });
+  const login = await (await instance.app.request('/api/v1/local/session', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Skoob-Local': '1' }, body: JSON.stringify({}) })).json();
+  const request = (path, method = 'GET', body) => instance.app.request('/api/v1' + path, { method, headers: { 'Content-Type': 'application/json', 'X-Skoob-Local': '1', Authorization: `Bearer ${login.token}` }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  const json = async (path, method, body) => { const r = await request(path, method, body); const data = await r.json(); assert.ok(r.ok, JSON.stringify(data)); return data; };
+  assert.equal((await json('/local/cloud/access')).ready, false);
+  for (const path of ['/tianmo/brainstorm/cards', '/tianmo/brainstorm/cards/card/image', '/tianmo/hotboard/boards', '/tianmo/hotboard/aggregate', '/tianmo/scan/platforms', '/tianwang/catalog', '/tianwang-library/templates', '/covers/file/asset/1']) assert.equal((await request(path)).status, 403, path); assert.equal(calls.length, 0);
+  await json('/local/onboarding', 'PUT', { choice: 'local' }); assert.equal((await json('/local/onboarding')).choice, 'local');
+  await json('/genres', 'POST', { id: 'same', name: 'Local genre' });
+  await json('/services/config', 'PUT', { services: [{ service: 'custom', name: 'My model', baseUrl: base }], service: 'custom:My model', defaultModel: 'my-model' });
+  await json('/services/custom%3AMy%20model/secret', 'PUT', { apiKey: 'my-own-secret' });
+  await json('/local/cloud', 'PUT', { baseUrl: base, apiKey: 'official-token' });
+  assert.equal((await json('/local/cloud/access')).ready, false); assert.equal((await request('/tianmo/brainstorm/cards')).status, 403);
+  const listed = await json('/local/cloud/keys'); assert.equal(listed.keys[0].eligible, true); assert.equal(listed.keys[1].eligible, false); assert.ok(!JSON.stringify(listed).includes(free.key));
+  for (const keyId of ['8', '9', '10', '../7']) assert.ok((await request('/local/cloud/keys/select', 'POST', { keyId })).status >= 400);
+  const selected = await json('/local/cloud/keys/select', 'POST', { keyId: '7' });
+  assert.equal((await json('/local/cloud/access')).ready, true); assert.equal((await json('/account/membership')).isMember, false);
+  assert.equal((await json('/services/config')).service, 'custom:My model'); assert.equal(instance.store.secret('custom:My model'), 'my-own-secret');
+  assert.ok(!JSON.stringify(instance.store.list('secrets')).includes(free.key));
+  const genres = (await json('/genres')).genres; assert.deepEqual(genres.map(g => g.id), ['same', 'official:same']); assert.equal(genres[1].editable, false);
+  assert.equal((await json('/agent-templates')).templates[0].id, 'official:same');
+  assert.equal((await json('/agent-prototypes')).prototypes[0].id, 'official:same');
+  assert.equal((await json('/tianmo/brainstorm/cards')).cards[0].id, 'card');
+  assert.equal((await request('/tianmo/inspiration/plan', 'POST', {})).status, 403);
+  assert.equal((await request('/genres/official%3Asame', 'DELETE')).status, 403); assert.equal(instance.store.get('genres', 'same').name, 'Local genre');
+  const catalog = cloudCatalog(instance.store, {}, freeAccess(instance.store, {}));
+  assert.match(await selectedContext(instance.store, { capabilityRefs: [{ kind: 'genre', id: 'official:same' }] }, catalog.material), /official writing guidance/);
+  assert.ok(calls.filter(c => c.path === '/api/v1/open/catalog/genres').every(c => c.auth === `Bearer ${free.key}`));
+  assert.ok(!calls.some(c => c.auth === `Bearer ${login.token}`)); assert.ok(!calls.some(c => c.path.startsWith('/api/v1/keys') && c.method !== 'GET'));
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} }); assert.equal((await json('/local/cloud/access')).ready, true);
+  active = false;
+  assert.equal((await request('/tianmo/brainstorm/cards')).status, 200); // short, previously verified snapshot
+  const realNow = Date.now; t.mock.method(Date, 'now', () => realNow() + 31000);
+  assert.equal((await request('/tianmo/brainstorm/cards')).status, 403); Date.now.mock.restore();
+  assert.equal((await json('/local/cloud/access?refresh=1')).ready, false); assert.equal((await request('/tianmo/brainstorm/cards')).status, 403); assert.equal((await json('/genres')).genres.length, 1);
+  active = true; reachable = false; assert.equal((await json('/local/cloud/access?refresh=1')).ready, false); reachable = true;
+  await json('/services/' + encodeURIComponent(selected.service), 'DELETE'); assert.equal((await json('/local/cloud/access')).ready, false);
+  assert.equal(instance.store.secret(selected.service), ''); assert.equal((await json('/local/cloud/access')).ready, false);
+  await json('/local/cloud/keys/select', 'POST', { keyId: '7' }); accountId = '99'; assert.equal((await json('/local/cloud/access?refresh=1')).ready, false); accountId = '42';
+  await json('/local/cloud', 'PUT', { baseUrl: base, apiKey: '' }); assert.equal((await json('/local/cloud/access')).ready, false); assert.equal((await json('/genres')).genres.length, 1);
+  assert.equal(instance.store.secret('custom:My model'), 'my-own-secret');
+});
+
+test('pasted official Key connects without account login and never becomes a platform identity', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'skoob-direct-key-test-'));
+  let instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  t.after(async () => { await instance.close(); rmSync(dir, { recursive: true, force: true }); });
+  // Old installations with a password record also bootstrap with no password.
+  instance.store.set('settings', 'auth', { salt: 'old', digest: 'old' });
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  const boot = await instance.app.request('/api/v1/local/session', { method: 'POST', headers: { 'X-Skoob-Local': '1' } });
+  assert.equal(boot.status, 200); const session = await boot.json();
+  const request = (path, method = 'GET', body) => instance.app.request('/api/v1' + path, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  const json = async (...args) => { const r = await request(...args); const data = await r.json(); assert.ok(r.ok, JSON.stringify(data)); return data; };
+  let revoked = false; const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    const path = String(url); const auth = new Headers(init.headers).get('authorization'); calls.push({ path, auth });
+    if (path === 'https://skoob.cc/api/v1/open/access?refresh=1') {
+      if (['Bearer invalid', 'Bearer expired'].includes(auth) || revoked) return Response.json({ error: { code: 'FREE_KEY_INVALID' } }, { status: 401 });
+      return Response.json(grant);
+    }
+    assert.equal(auth, 'Bearer valid-free-model-key', 'catalogs must use the selected official Key, never a local token');
+    if (path === 'https://skoob.cc/api/v1/open/catalog/genres') return Response.json({ genres: [{ id: 'official-genre', name: '官方流派' }] });
+    if (path === 'https://skoob.cc/api/v1/open/catalog/tianmo/brainstorm/cards') return Response.json({ cards: [{ id: 'official-card' }] });
+    throw new Error('unexpected upstream request');
+  });
+  assert.equal((await request('/tianmo/brainstorm/cards')).status, 403);
+  await json('/local/onboarding', 'PUT', { choice: 'local' });
+  assert.deepEqual((await json('/genres')).genres, []); assert.equal(calls.length, 0);
+  await json('/services/config', 'PUT', { service: 'custom:mine', defaultModel: 'mine', services: [{ service: 'custom', name: 'mine' }] });
+  for (const apiKey of ['', 'invalid', 'expired']) assert.ok((await request('/local/cloud/key', 'POST', { apiKey })).status >= 400);
+  assert.equal((await json('/local/cloud/access')).ready, false);
+  const connected = await json('/local/cloud/key', 'POST', { apiKey: 'valid-free-model-key' });
+  assert.equal((await json('/local/cloud/access')).ready, true);
+  assert.equal((await json('/local/onboarding')).choice, 'official');
+  assert.equal((await json('/local/cloud')).configured, false);
+  assert.equal((await json('/account/membership')).isMember, false);
+  assert.equal((await json('/services/config')).service, 'custom:mine');
+  assert.equal((await json('/tianmo/brainstorm/cards')).cards[0].id, 'official-card');
+  assert.equal((await json('/genres')).genres[0].source, 'official');
+  assert.equal((await request('/tianmo/inspiration/plan', 'POST', {})).status, 503);
+  instance.store.set('agentTemplates', 'mine', { id: 'mine', name: 'My template', content: 'Own content' });
+  assert.equal((await request('/local/cloud/templates/agent/mine/upload', 'POST', {})).status, 503);
+  assert.ok(!JSON.stringify(instance.store.list('secrets')).includes('valid-free-model-key'));
+  assert.ok(!JSON.stringify(await json('/local/cloud/access')).includes('valid-free-model-key'));
+  await instance.close(); instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  assert.equal((await json('/local/cloud/access')).ready, true);
+  revoked = true; assert.equal((await json('/local/cloud/access?refresh=1')).ready, false);
+  assert.equal((await request('/tianmo/brainstorm/cards')).status, 403);
+  revoked = false; await json('/local/cloud/key', 'POST', { apiKey: 'valid-free-model-key' });
+  await json('/local/cloud/key', 'DELETE'); assert.equal((await json('/local/cloud/access')).ready, false);
+  assert.equal(instance.store.secret(connected.service), 'valid-free-model-key');
+  assert.equal((await json('/services/config')).service, 'custom:mine');
+});
+
+test('cloud rejects revoked rights even with a cached local grant and local libraries remain usable', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'skoob-rights-test-'));
+  const instance = createApplication({ dataDir: dir, cloudEnv: {} });
+  t.after(async () => { await instance.close(); rmSync(dir, { recursive: true, force: true }); });
+  const session = await (await instance.app.request('/api/v1/local/session', { method: 'POST', headers: { 'X-Skoob-Local': '1' } })).json();
+  const request = (path, method = 'GET', body) => instance.app.request('/api/v1' + path, { method, headers: { Authorization: `Bearer ${session.token}`, 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  let rights = [...plan.entitlements]; const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    const path = new URL(url).pathname; calls.push(path);
+    assert.equal(new Headers(init.headers).get('authorization'), 'Bearer fixture-key');
+    if (path === '/api/v1/open/access') return Response.json({ ...grant, plan: { ...plan, entitlements: rights }, entitlements: rights });
+    assert.ok(path.startsWith('/api/v1/open/catalog/'), 'never fall back to anonymous website APIs');
+    if (!rights.includes('brainstorm.read') && path.endsWith('/brainstorm/cards')) return Response.json({ error: { code: 'FREE_ENTITLEMENT_REQUIRED', entitlement: 'brainstorm.read' } }, { status: 403 });
+    return Response.json({ cards: [{ id: 'card' }] });
+  });
+  assert.equal((await request('/local/cloud/key', 'POST', { apiKey: 'fixture-key' })).status, 200);
+  assert.equal((await request('/tianmo/brainstorm/cards')).status, 200);
+  rights = ['hotboard.read'];
+  assert.equal((await request('/tianmo/brainstorm/cards')).status, 403);
+  const status = await (await request('/local/cloud/access?refresh=1')).json();
+  assert.deepEqual(status.entitlements, ['hotboard.read']);
+  instance.store.set('genres', 'mine', { id: 'mine', name: 'Local' });
+  assert.deepEqual((await (await request('/genres')).json()).genres.map(x => x.id), ['mine']);
+  assert.equal((await (await request('/account/membership')).json()).isMember, false);
+  assert.ok(!calls.includes('/api/v1/open/catalog/genres'));
+});
