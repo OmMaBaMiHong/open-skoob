@@ -259,7 +259,7 @@
     },
     {
       "path": "src/hooks/use-composer-data.ts",
-      "sha256": "3f920d0ba6d415436bd22f92f2fc28d5e0813faab76683b004f2fc7bc8ebfe9c"
+      "sha256": "c7e660bca36c238f8621bc918e9c398f30028606674e844588af85ce972e5bb2"
     },
     {
       "path": "src/hooks/use-follow-output.ts",
@@ -327,7 +327,7 @@
     },
     {
       "path": "src/lib/api.ts",
-      "sha256": "f92672cec951eee22a504b263d248431b05df1e2a9f05913bf6288d1b574d788"
+      "sha256": "d10f01cad2a3c7ceda11fcab1ea11673a2feb25729929980a1eb46aee59a38d0"
     },
     {
       "path": "src/lib/auth-storage.ts",
@@ -835,7 +835,7 @@
     },
     {
       "path": "server/app.mjs",
-      "sha256": "50226874d1eace1742b09cb2ef916545cfcd2cdfa33864083081c06642315f5a"
+      "sha256": "64043334e52fc79e2aed8341b756f70c49856f55626b6b6afcf48a85c75c762f"
     },
     {
       "path": "server/creation.mjs",
@@ -843,7 +843,7 @@
     },
     {
       "path": "server/app.test.mjs",
-      "sha256": "03375fc4012e63a1b6e0923f76a16c2483caf1eb1b99ee0adf7b1bab1acf6324"
+      "sha256": "df409fdbbf7cb327b74ce0c5c246843c5988addd23319c2043fd3824a1c3bc59"
     },
     {
       "path": "scripts/dev.mjs",
@@ -899,7 +899,7 @@
     },
     {
       "path": "server/cloud-catalog.mjs",
-      "sha256": "19ba4b7261414418a3d21b6a9e548e846288869c3b301f746ba86f43b7936d8b"
+      "sha256": "976b40897fe1412cc78e9ca2fb8ffb33d44c5a53f0527698d37c6298e589337b"
     },
     {
       "path": "src/cloud-access.tsx",

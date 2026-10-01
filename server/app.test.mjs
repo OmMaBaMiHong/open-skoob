@@ -202,3 +202,35 @@ test('text attachments persist, duplicate upload IDs cannot replace data, and bi
   await f.json('/services/custom:encrypted/secret','PUT',{apiKey:'never-store-me-as-plaintext'});
   assert.ok(!JSON.stringify(f.app.store.get('secrets','custom:encrypted')).includes('never-store-me-as-plaintext'));
 });
+
+
+test('composer catalog cards omit bodies while full reads and selected materials retain them', async t => {
+  const f = await fixture(t);
+  await f.json('/skills', 'POST', { id: 'local-skill', name: 'Writing', body: 'full skill body', triggers: ['write'] });
+  await f.json('/genres', 'POST', { id: 'local-genre', name: 'Fantasy', body: 'full genre body', content: 'full content', profile: 'full profile', summary: 'short summary' });
+  const skill = (await f.json('/skills?summary=1')).skills[0];
+  assert.equal(skill.body, undefined);
+  assert.deepEqual(skill.triggers, ['write']);
+  assert.equal((await f.json('/skills')).skills[0].body, 'full skill body');
+  const genre = (await f.json('/genres?card=1')).genres[0];
+  assert.equal(genre.body, undefined);
+  assert.equal(genre.content, undefined);
+  assert.equal(genre.profile, undefined);
+  assert.equal(genre.summary, 'short summary');
+  assert.equal((await f.json('/genres/local-genre/cluster')).body, 'full genre body');
+  const { cloudCatalog } = await import('./cloud-catalog.mjs');
+  const calls = [];
+  const store = { get: () => ({ service: 'gaotk' }), secret: () => 'fixture-key', list: () => [] };
+  t.mock.method(globalThis, 'fetch', async url => {
+    const path = new URL(url).pathname + new URL(url).search; calls.push(path);
+    if (path.includes('/skills')) return Response.json({ skills: [{ id: 'remote', name: 'Remote', body: 'remote skill body' }] });
+    return Response.json({ genres: [{ id: 'remote', name: 'Remote', body: 'remote genre body', summary: 'remote summary' }] });
+  });
+  const catalog = cloudCatalog(store, {}, { requireFree: async () => ({ service: 'gaotk', entitlements: ['templates.read'] }) });
+  assert.equal((await catalog.list('skills', { summary: true }))[0].body, undefined);
+  assert.match(calls.at(-1), /skills\?summary=1$/);
+  assert.equal((await catalog.list('genres', { card: true }))[0].body, undefined);
+  assert.match(calls.at(-1), /genres\?card=1$/);
+  assert.equal((await catalog.material('skills', 'official:remote')).body, 'remote skill body');
+  assert.match(calls.at(-1), /skills$/);
+});

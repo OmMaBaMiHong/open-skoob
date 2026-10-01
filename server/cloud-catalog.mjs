@@ -21,19 +21,23 @@ export function cloudCatalog(store, env, access) {
     if (now.key !== cfg.key || now.userId !== cfg.userId || now.baseUrl !== cfg.baseUrl || store.secret(grant.service) !== key || store.get("settings", "freeAccess")?.service !== grant.service) throw new ApiError(409, 'CLOUD_CONNECTION_CHANGED', '账号已改变，请刷新目录。');
     return data;
   }
-  async function remote(collection) {
-    const [path, field] = collections[collection]; const result = await read('/' + path);
+  async function remote(collection, options = {}) {
+    const [path, field] = collections[collection];
+    const query = collection === 'skills' && options.summary ? '?summary=1' : collection === 'genres' && options.card ? '?card=1' : '';
+    const result = await read('/' + path + query);
     if (!Array.isArray(result?.[field])) throw new ApiError(502, 'CLOUD_CATALOG_INVALID', '官方目录返回格式不正确');
     return result[field].map(item => ({ ...item, id: CLOUD_ID + item.id, officialId: item.id, source: 'official', isMine: false, editable: false }));
   }
   return {
     read,
-    async list(collection) {
+    async list(collection, options = {}) {
       const local = collection === 'prototypes' ? store.list('agentTemplates').map(t => ({ id: t.id, kind: 'agent', name: t.name, role: t.domain || '', tags: t.keywords || [], description: t.content || '', assetId: t.id })) : store.list(collection);
+      const slim = items => options.summary && collection === 'skills' ? items.map(({ body, ...item }) => item)
+        : options.card && collection === 'genres' ? items.map(({ body, content, profile, ...item }) => item) : items;
       // No selected Key means a deliberately local-only library, not an empty official catalog.
-      if (!store.get('settings', 'freeAccess')) return local;
-      try { if (!(await access.requireFree()).entitlements.includes('templates.read')) return local; return [...local, ...await remote(collection)]; }
-      catch (e) { if (['FREE_PLAN_DISABLED', 'FREE_ENTITLEMENT_REQUIRED', 'FREE_KEY_REQUIRED', 'FREE_KEY_INVALID', 'FREE_KEY_CHANGED', 'FREE_VERIFY_UNAVAILABLE', 'FREE_VERIFY_FAILED', 'CLOUD_LOGIN_REQUIRED'].includes(e.code)) return local; throw e; }
+      if (!store.get('settings', 'freeAccess')) return slim(local);
+      try { if (!(await access.requireFree()).entitlements.includes('templates.read')) return slim(local); return slim([...local, ...await remote(collection, options)]); }
+      catch (e) { if (['FREE_PLAN_DISABLED', 'FREE_ENTITLEMENT_REQUIRED', 'FREE_KEY_REQUIRED', 'FREE_KEY_INVALID', 'FREE_KEY_CHANGED', 'FREE_VERIFY_UNAVAILABLE', 'FREE_VERIFY_FAILED', 'CLOUD_LOGIN_REQUIRED'].includes(e.code)) return slim(local); throw e; }
     },
     async material(collection, id) {
       if (!isOfficialId(id)) return store.get(collection, id);

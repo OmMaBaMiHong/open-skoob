@@ -154,8 +154,8 @@ export function useComposerData(opts: { graphId?: string; preserveExplicitModel?
     let alive = true;
     if (!templatesAllowed) { setSkills(previous => previous.filter(x => !x.id.startsWith("official:"))); setGenres(previous => previous.filter(x => !x.id.startsWith("official:"))); setTemplates(previous => previous.filter(x => !x.id.startsWith("official:"))); }
     void Promise.all([
-      fetchSkills().catch(() => []),
-      fetchGenres().catch(() => []),
+      fetchSkills({ summary: true }).catch(() => []),
+      fetchGenres({ card: true }).catch(() => []),
       fetchAgentTemplates().catch(() => []),
       readAuth() ? fetchProjectLlm().catch(() => null) : Promise.resolve(null),
     ]).then(([sk, ge, tp, lm]) => { if (alive) { setSkills(templatesAllowed ? sk : sk.filter(x => !x.id.startsWith("official:"))); setGenres(templatesAllowed ? ge : ge.filter(x => !x.id.startsWith("official:"))); setTemplates(templatesAllowed ? tp : tp.filter(x => !x.id.startsWith("official:"))); setLlm(lm); } });

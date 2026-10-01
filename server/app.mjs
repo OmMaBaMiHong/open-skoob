@@ -252,7 +252,7 @@ export function createApplication({ dataDir, origins = [], cloudEnv = process.en
 
   // Local editable libraries start empty; these are persisted collections, not cloud catalog replicas.
   for (const [path, collection, key] of [['skills','skills','skills'], ['agent-templates','agentTemplates','templates'], ['genres','genres','genres']]) {
-    app.get(`/api/v1/${path}`, async c => c.json({ [key]: await catalog.list(collection) }));
+    app.get(`/api/v1/${path}`, async c => c.json({ [key]: await catalog.list(collection, { summary: c.req.query('summary') === '1', card: c.req.query('card') === '1' }) }));
     app.post(`/api/v1/${path}`, async c => { const b = await body(c); const id = typeof b.id === 'string' ? b.id : randomUUID(); assertLocalId(id); const value = { ...b, id, isMine: true, editable: true, source: 'project' }; store.set(collection, id, value); return c.json({ ok: true, id, [key.slice(0, -1)]: value }); });
     app.put(`/api/v1/${path}/:id`, async c => { assertLocalId(c.req.param('id')); const b = await body(c); store.set(collection, c.req.param('id'), { ...b, id: c.req.param('id'), isMine: true, editable: true, source: 'project' }); return c.json({ ok: true }); });
     app.delete(`/api/v1/${path}/:id`, c => { assertLocalId(c.req.param('id')); store.remove(collection, c.req.param('id')); return c.json({ ok: true }); });

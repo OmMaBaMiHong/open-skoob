@@ -2012,8 +2012,8 @@ export interface SkillInfo {
   readonly installs?: number;
 }
 
-export async function fetchSkills(): Promise<ReadonlyArray<SkillInfo>> {
-  const d = await fetchJson<{ skills: ReadonlyArray<SkillInfo> }>("/skills");
+export async function fetchSkills(options: { summary?: boolean } = {}): Promise<ReadonlyArray<SkillInfo>> {
+  const d = await fetchJson<{ skills: ReadonlyArray<SkillInfo> }>(options.summary ? "/skills?summary=1" : "/skills");
   return d.skills ?? [];
 }
 
@@ -2226,8 +2226,8 @@ export interface GenreInfo {
   readonly coverUrl?: string | null;
 }
 
-export async function fetchGenres(): Promise<ReadonlyArray<GenreInfo>> {
-  const d = await fetchJson<{ genres: ReadonlyArray<GenreInfo> }>("/genres");
+export async function fetchGenres(options: { card?: boolean } = {}): Promise<ReadonlyArray<GenreInfo>> {
+  const d = await fetchJson<{ genres: ReadonlyArray<GenreInfo> }>(options.card ? "/genres?card=1" : "/genres");
   return d.genres ?? [];
 }
 
