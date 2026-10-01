@@ -3,7 +3,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { resolve } from 'node:path';
 import { createApplication } from './app.mjs';
 
-const port = Number(process.env.PORT || 9002);
+const port = Number(process.env.PORT || 1688);
 const host = process.env.HOST || '127.0.0.1';
 const application = createApplication({ dataDir: resolve(process.env.SKOOB_DATA_DIR || './data'), origins: (process.env.SKOOB_ALLOWED_ORIGINS || '').split(',').filter(Boolean) });
 application.app.get('*', serveStatic({ root: './dist' }));

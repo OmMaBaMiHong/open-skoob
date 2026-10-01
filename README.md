@@ -188,7 +188,7 @@ npm ci
 npm run dev
 ```
 
-打开 `http://127.0.0.1:9002`：
+打开 `http://127.0.0.1:1688`：
 
 
 
@@ -218,7 +218,7 @@ docker compose up --build -d
 docker compose logs skoob
 ```
 
-Docker 数据保存在 `skoob-data` 卷，默认仅开放本机 `9002` 端口，启动不需要密码。远程部署请在 HTTPS 反向代理配置访问控制，并设置 `SKOOB_ALLOWED_ORIGINS` 为实际访问源地址。
+Docker 数据保存在 `skoob-data` 卷，默认仅开放本机 `1688` 端口，启动不需要密码。远程部署请在 HTTPS 反向代理配置访问控制，并设置 `SKOOB_ALLOWED_ORIGINS` 为实际访问源地址。
 
 本机安装的数据默认位于 `data/`，包含作品、会话、配置和加密凭证；备份时停止服务并完整备份该目录，保留其中的 `secrets.key`。不要上传数据目录或 `.env`。本地附件支持 UTF-8 文本、Markdown、JSON 和 CSV；二进制文档请先转换为文本。
 

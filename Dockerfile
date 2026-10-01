@@ -12,6 +12,6 @@ COPY --from=build --chown=node:node /app/server ./server
 COPY --from=build --chown=node:node /app/dist ./dist
 RUN mkdir /app/data && chown node:node /app/data
 USER node
-ENV HOST=0.0.0.0 PORT=9002 SKOOB_DATA_DIR=/app/data
-EXPOSE 9002
+ENV HOST=0.0.0.0 PORT=1688 SKOOB_DATA_DIR=/app/data
+EXPOSE 1688
 CMD ["node", "server/index.mjs"]
