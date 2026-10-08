@@ -259,7 +259,7 @@ QQ 群：**1107955676**（焚决 skoob・小说 Agent 创作群）
 
 
 
-![QQ 交流群二维码](.github/assets/qq-group.jpg)
+![QQ 交流群二维码](.github/assets/qq-group.jpg) 点击链接加入群聊【焚决skoob-小说agent交流群】：https://qm.qq.com/q/fyQbsikYfK
 
 如果这个项目对你有帮助，欢迎请作者喝杯奶茶 ☕（微信支付）
 
