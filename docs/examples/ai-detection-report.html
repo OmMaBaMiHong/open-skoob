@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>天工AI检测报告 · 示例 · AI 风险 70%</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { font: 15px/1.7 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         color: #292524; background: white; max-width: 780px; margin: 0 auto; padding: 32px 20px 48px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .meta { color: #78716c; font-size: 13px; margin-bottom: 20px; }
+  .hero { border: 1px solid #e7e5e4; border-left: 4px solid transparent; border-radius: 10px;
+          padding: 18px 20px; margin-bottom: 16px; display: flex; gap: 24px; align-items: center; }
+  .hero .num { font-size: 40px; font-weight: 700; white-space: nowrap; }
+  .hero .num small { display: block; font-size: 12px; font-weight: 400; color: #78716c; }
+  .hero .band { font-size: 15px; }
+  .hero .conf { color: #78716c; font-size: 13px; margin-top: 4px; }
+  .split { display: flex; height: 30px; border-radius: 8px; overflow: hidden; margin: 0 0 16px; font-size: 12.5px; }
+  .split div { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; white-space: nowrap; color: white; font-weight: 600; }
+  h2 { font-size: 15px; margin: 26px 0 8px; padding-bottom: 6px; border-bottom: 1px solid #e7e5e4; }
+  .muted { color: #78716c; font-size: 13px; }
+  .original { white-space: pre-wrap; font-family: "Songti SC", "SimSun", serif;
+              background: #fafaf9; border: 1px solid #e7e5e4; border-radius: 8px; padding: 16px 18px; }
+  .foot { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e7e5e4;
+          color: #a8a29e; font-size: 12px; display: flex; justify-content: space-between; }
+  @media print { .original { max-height: none; overflow: visible; } body { padding: 0; } }
+
+  .hero { border-left-color: #B45309; }
+  .hero .num, .hero .band b { color: #B45309; }
+  .split-h { background: #15803D; }
+  .split-a { background: #B42318; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #f0efee; vertical-align: top; }
+  th { color: #78716c; font-weight: 500; white-space: nowrap; }
+  .issue { padding: 8px 0; border-bottom: 1px dashed #f0efee; }
+  .sev { font-size: 12px; color: #B42318; border: 1px solid currentColor; border-radius: 4px; padding: 0 5px; }
+  .ev-group { margin: 8px 0; }
+  .ev-label { font-size: 13px; color: #78716c; margin: 10px 0 4px; }
+  .ev { padding: 6px 0; border-bottom: 1px dashed #f0efee; font-size: 14px; }
+  .ev i { font-style: normal; color: #B45309; font-size: 12px; border: 1px solid #fde68a; border-radius: 4px; padding: 0 5px; }
+  .ev q { display: block; color: #57534e; font-style: italic; }
+  .pass { color: #15803D; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; }
+
+</style>
+</head>
+<body>
+  <h1>天工AI检测报告</h1>
+  <div class="meta">检测时间 2026-10-02 21:13 · 2,670 字
+    · 来源 写书章节（第 1 章 · 编号还挂在颈上）</div>
+
+  <section><h2>全文统计分析覆盖</h2><p>已验证 2670/2670 字（100.0%）；已验证段计分 2025/2025 个目标 token</p><p>实验风险分不是 AI 生成概率或 AI 字数占比；完整计分不表示生成来源已确认。</p>
+    <div><h3>第 1 段 · 第 1–1200 字 · AI 风险 75% · 疑似 AI（审校师）</h3><p>没有标定系数，无法给出 AI 概率。先跑 scripts/calibrate-perplexity.ts。 当前统计或独立评估依据不足，不能作为生成来源证明。</p><p>困惑度 42.43 · logprob 波动 2.69（统计特征，不是 AI 概率）</p><p class="muted">（原文长段落略，全文 2,670 字已逐段计分，详见检测原文留档）</p></div><div><h3>第 2 段 · 第 1201–2670 字 · AI 风险 42% · 人工特征（审校师）</h3><p>没有标定系数，无法给出 AI 概率。先跑 scripts/calibrate-perplexity.ts。 当前统计或独立评估依据不足，不能作为生成来源证明。</p><p>困惑度 33.76 · logprob 波动 2.70（统计特征，不是 AI 概率）</p><p class="muted">（原文长段落略，全文 2,670 字已逐段计分，详见检测原文留档）</p></div></section>
+  <div class="hero">
+    <div class="num"><small>AI 风险</small>70%</div>
+    <div class="band">
+      <b>疑似 AI</b>
+      <div class="conf">人工特征 30% · AI 风险 70%
+        · 人味分 10/100</div>
+    </div>
+  </div>
+  <div class="split" aria-hidden="true">
+    <div class="split-h" style="width:30%">人工特征 30%</div>
+    <div class="split-a" style="width:70%">AI 风险 70%</div>
+  </div>
+
+  <h2>评估维度（权重满分 100）</h2>
+  <table><tr><th>维度</th><th>得分</th><th>权重</th><th>本次实际</th><th>说明</th></tr>
+    <tr>
+      <td>规则 + 文体统计</td>
+      <td>90%</td>
+      <td>15/100</td>
+      <td>30/100</td>
+      <td class="muted">文学腔强指纹 1 项越界（明喻密度 4.72）。</td>
+    </tr>
+    <tr>
+      <td>困惑度</td>
+      <td>未标定</td>
+      <td>50/100</td>
+      <td>0/100</td>
+      <td class="muted">没有标定系数，无法给出 AI 概率。先跑 scripts/calibrate-perplexity.ts。</td>
+    </tr>
+    <tr>
+      <td>AI 特征审校师</td>
+      <td>57%</td>
+      <td>35/100</td>
+      <td>70/100</td>
+      <td class="muted">未单独配置审校师路由，用的是写书默认模型；写书与审校同一台模型时判读会偏宽。</td>
+    </tr></table>
+
+  <h2>提示</h2><div class="muted">· 困惑度：没有标定系数，无法给出 AI 概率。先跑 scripts/calibrate-perplexity.ts。</div><div class="muted">· 实验风险分：融合权重尚未通过独立小说数据标定；分数不是 AI 生成概率，也不是 AI 字数占比。</div><div class="muted">· AI 特征审校师：未单独配置审校师路由，用的是写书默认模型；写书与审校同一台模型时判读会偏宽。</div>
+
+  
+    <h2>AI 特征审校师 · 本路送审 2670 字 · gemini-3.8-flash（AI 模式 4.73/千字）</h2>
+    <p>文本表面呈现出克制、硬朗的短句白描风格，但明喻密度极高且多为感官定格比方，多处命中‘不是…而是’翻案腔与‘说不清的’等含混套语，符合精修文学腔 AI 的特征；动作虽然具体，但属于典型场景营造而非实质人味推进。／明喻密度与翻案修辞（不是…而是）呈现轻度文学腔 AI 倾向，但通篇以高度扎实的动作链、触觉细节推进，情绪完全靠生理反应与心理机制外化，叙述克制，整体人味与人工打磨特征更占上风。</p>
+    
+    <div class="ev-group"><div class="ev-label">AI 证据 15</div>
+    
+      <div class="ev">
+        <b>明喻过密</b> <i>词汇</i>
+        <q>胸腔里像塞了半块湿布</q>
+      </div>
+      <div class="ev">
+        <b>翻案腔（不是…而是）</b> <i>句式</i>
+        <q>空气里那股铁锈味不是从外面来的，是他自己喉咙里的</q>
+      </div>
+      <div class="ev">
+        <b>翻案腔（不是…而是）</b> <i>句式</i>
+        <q>不是夜的黑，是石头压出来的黑</q>
+      </div>
+      <div class="ev">
+        <b>明喻过密</b> <i>词汇</i>
+        <q>像有人拿火把在石头上画过什么又半途停了</q>
+      </div>
+      <div class="ev">
+        <b>翻案腔（不是…而是）</b> <i>句式</i>
+        <q>挂在皮肉上，不是挂着玩的</q>
+      </div>
+      <div class="ev">
+        <b>明喻过密</b> <i>词汇</i>
+        <q>像被烟熏了很多年</q>
+      </div>
+      <div class="ev">
+        <b>翻案腔（不是…而是）</b> <i>句式</i>
+        <q>不是想出来的，是自己浮上来的</q>
+      </div>
+      <div class="ev">
+        <b>含混套语+感官公式</b> <i>句式</i>
+        <q>铁锈味里混进一股说不清的味道，像放久了的药</q>
+      </div>
+      <div class="ev">
+        <b>翻案腔（不是…而是）</b> <i>句式</i>
+        <q>不是被晒的，是石头自己热</q>
+      </div>
+      <div class="ev">
+        <b>翻案腔（不是…而是）</b> <i>句式</i>
+        <q>不是被石头烤热的那种烫，是从铁牌内部往外烧的那种烫</q>
+      </div>
+      <div class="ev">
+        <b>明喻密集</b> <i>词汇</i>
+        <q>绕得像肠子</q>
+      </div>
+      <div class="ev">
+        <b>明喻密集</b> <i>词汇</i>
+        <q>像有人拿针尖扎了一下又一下</q>
+      </div>
+      <div class="ev">
+        <b>明喻密集</b> <i>词汇</i>
+        <q>短得像眨眼</q>
+      </div>
+      <div class="ev">
+        <b>明喻密集</b> <i>词汇</i>
+        <q>指节像几截枯枝</q>
+      </div>
+      <div class="ev">
+        <b>翻案腔（不是…是）</b> <i>句式</i>
+        <q>不是忘了，是那格子里本来就是空的。</q>
+      </div>
+    </div>
+    
+    <div class="ev-group"><div class="ev-label">人味证据 6</div>
+    
+      <div class="ev">
+        <b>动作身体化外化反应</b> <i>人味</i>
+        <q>左臂一软，整个人栽回去，后脑磕在石头上，眼前白了一瞬</q>
+      </div>
+      <div class="ev">
+        <b>实体物件细节触感质朴</b> <i>人味</i>
+        <q>窄长的一条，边缘糙，中间有凸起的字口</q>
+      </div>
+      <div class="ev">
+        <b>动作外化情绪与状态</b> <i>人味</i>
+        <q>两只手抠进墙缝里，指甲翻起</q>
+      </div>
+      <div class="ev">
+        <b>内省体验具象化而非直白贴标签</b> <i>叙述姿态</i>
+        
+      </div>
+      <div class="ev">
+        <b>连续实感动作与声响细节链</b> <i>人味</i>
+        <q>掰开蜷着的手指，一样东西从掌心滚出来，落在石地上，叮的一声轻响</q>
+      </div>
+      <div class="ev">
+        <b>口语化目标驱力与持续生理触觉收尾</b> <i>人味</i>
+        
+      </div>
+    </div>
+
+  
+    <h2>文体指标 · 对照人类小说区间（3 项偏离）</h2>
+    <table>
+      <tr><th>指标</th><th>本次</th><th>人类区间</th><th>偏离</th></tr>
+      
+        <tr>
+          <td>句长起伏</td>
+          <td>0.681</td>
+          <td>0.465–0.954</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>段长起伏</td>
+          <td>0.709</td>
+          <td>0.384–0.744</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>分句节奏</td>
+          <td>0.555</td>
+          <td>0.433–0.876</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>句号密度</td>
+          <td>51.311</td>
+          <td>5.96–26.09</td>
+          <td>偏高 97%</td>
+        </tr>
+        <tr>
+          <td>平均句长</td>
+          <td>18.657</td>
+          <td>24.34–67.26</td>
+          <td>偏低 23%</td>
+        </tr>
+        <tr>
+          <td>句首重复</td>
+          <td>0.029</td>
+          <td>0.058–0.242</td>
+          <td>偏低 50%</td>
+        </tr>
+        <tr>
+          <td>三字组多样度</td>
+          <td>0.923</td>
+          <td>0.901–0.959</td>
+          <td>—</td>
+        </tr>
+    </table>
+  
+    <h2>检测发现 17 · 高危 1 · 中 14 · 低 2</h2>
+    
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「凉的东西硌着锁骨。他抬手去摸，指尖先碰到皮肤，再碰到铁。窄长的一条，边缘糙，中间有凸起的字口。」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「他试着撑起上半身。
+
+左臂一软，整个人栽回去，后脑磕在石头上，眼前白了一瞬。等白光散掉，他趴在地上喘，」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「深处有很轻的风声，说明前面通着。但甬道不是直的，走了一截就拐，拐过去又拐回来，绕得像肠子。」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「从一侧砌到另一侧，砌得很实，缝隙里塞着碎石。他伸手推了推，纹丝不动。他往旁边摸，摸到封口的边缘，」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「清了石室里的东西。
+
+遗骸。数具，散在地上，姿势各不相同。有侧躺的，有蜷着的，有一具半坐在墙根，头歪着。」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「人被按在这面墙前，背贴着石墙，两只手抠进墙缝里，指甲翻起。有人站在他面前，看不清脸，」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「看见一只手抬起来，掌心有纹路在亮。
+
+画面没了。
+
+他站在原地，呼吸是乱的。手还按在铁牌上，铁牌不烫了，凉回去。」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「这些东西连在一起。
+
+铁牌。封堵的通道。成排的遗骸。被刮掉的阵纹。掌心里的残片。」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>句式单一 — 连续使用相同句式 <span class="sev">medium</span></div>
+        <div class="muted">「里泛着极淡的暗红。
+
+他转身，朝甬道更深处走。出口应该在那头。天黑之前，得出去。」</div>
+        <div class="muted">建议：变换句式结构，增加节奏变化</div>
+      </div>
+      <div class="issue">
+        <div>节奏均匀 — 句子长度变化过小 <span class="sev">medium</span></div>
+        <div class="muted">「了，一只手还垂在身侧，另一只手搭在膝盖上。他蹲下去，看那搭在膝盖上的手。
+
+手指蜷着，指缝里嵌着灰。
+
+他伸手去碰那只手。手是硬的，冷的，指节像几截枯枝。」</div>
+        <div class="muted">建议：增加句子长度变化，创造节奏感</div>
+      </div>
+      <div class="issue">
+        <div>推测性填补 — 使用「可能」「也许」「大概」填补信息空白 <span class="sev">medium</span></div>
+        <div class="muted">「应该是」</div>
+        <div class="muted">建议：查找具体信息或承认不知道</div>
+      </div>
+      <div class="issue">
+        <div>推测性填补 — 使用「可能」「也许」「大概」填补信息空白 <span class="sev">medium</span></div>
+        <div class="muted">「应该在」</div>
+        <div class="muted">建议：查找具体信息或承认不知道</div>
+      </div>
+      <div class="issue">
+        <div>每千字的句号数。把段落剁成一串等长短句时它会飙高——最容易暴露的 AI 节奏。 <span class="sev">high</span></div>
+        <div class="muted">「句号密度 51.311（人类小说区间 5.96–26.09，超出上界 97%）」</div>
+        <div class="muted">建议：短句切得太碎。把相邻的短句用逗号／分号连成长句，只在真正要顿住的地方用句号。</div>
+      </div>
+      <div class="issue">
+        <div>平均每句字数。过短说明整篇都在用短促陈述句。 <span class="sev">medium</span></div>
+        <div class="muted">「平均句长 18.657（人类小说区间 24.34–67.26，低于下界 23%）」</div>
+        <div class="muted">建议：整篇都是短促陈述句。至少让叙述段落里的句子长起来，把短句留给动作和对白。</div>
+      </div>
+      <div class="issue">
+        <div>最高频的句首二字占全部句子的比例。AI 爱连着用同一个主语起句。 <span class="sev">medium</span></div>
+        <div class="muted">「句首重复 0.029（人类小说区间 0.058–0.242，低于下界 50%）」</div>
+        <div class="muted">建议：句首过于分散，通常不是问题。</div>
+      </div>
+      <div class="issue">
+        <div>每千字「像 / 像是 / 仿佛 / 如同 / 宛如 / 好似」的次数。文学腔 AI 每段都要打一个比方。 <span class="sev">low</span></div>
+        <div class="muted">「明喻密度 4.72（人类小说 p95 ≤ 3，超出 57%）　例：「。肋骨动一下，胸腔里像塞了半块湿布。三。四」 「，烧焦的，断断续续，像有人拿火把在石头上画」 「，露出的皮肤是暗的，像被烟熏了很多年。他顺」」</div>
+        <div class="muted">建议：每个场景最多留 1 处真正点亮画面的明喻，其余换成精确动词或直接写感官。</div>
+      </div>
+      <div class="issue">
+        <div>每千字「一股 / 一丝 / 一线 / 一阵」+ 感官名词（气味 / 凉意 / 光 / 剧痛 …）的次数。每个场景标配一嗅一听一触，是模板化的五感。 <span class="sev">low</span></div>
+        <div class="muted">「感官公式 0.79（人类小说 p95 ≤ 0.5，超出 57%）　例：「来越闷，铁锈味里混进一股说不清的味道，像放久了的药。他」 「进去，直起身，先闻到一股更浓的药味。然后他看清了石室里」」</div>
+        <div class="muted">建议：五感细节要服务情节，不是每场景配额；删掉不推动任何东西的那几处。</div>
+      </div>
+  
+  
+  
+
+  <h2>检测原文</h2><div class="original">（留档于本地，报告内逐段计分结果如上）</div>
+
+  <div class="foot">
+    <span>天工AI检测 · 三路信号融合（规则与文体统计 / 困惑度 / AI 特征审校师）</span>
+    <span>报告生成于 2026-10-13 16:29</span>
+  </div>
+</body>
+</html>

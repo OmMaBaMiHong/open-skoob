@@ -222,6 +222,16 @@ flowchart TB
   <em>2,670 字章节检测：70% AI 风险 · 全文 100% 计分 · 指标权重可解释</em>
 </p>
 
+一份完整的检测报告长这样——全文逐段计分、三路信号融合判定、文体指标对照人类小说区间，并列出每一处值得打磨的地方：
+
+<p align="center">
+  <img src="docs/assets/ai-report-1.jpg" width="270" alt="检测报告 1/3：全文统计覆盖与分段判定"/>
+  <img src="docs/assets/ai-report-2.jpg" width="270" alt="检测报告 2/3：70% AI 风险与评估维度权重"/>
+  <img src="docs/assets/ai-report-3.jpg" width="270" alt="检测报告 3/3：文体指标与检测发现清单"/>
+</p>
+
+<sub>完整报告样例（可直接打开）：[docs/examples/ai-detection-report.html](docs/examples/ai-detection-report.html)</sub>
+
 ### 同人二创：基于母本开一条支线
 
 选定正史分歧点、继承母本世界观与资产、注入新主角，六师协调者按 fanfic-policy 约束生成意图卡——同人支线明确标记，不冒充正史、不默认续接原作结局。
